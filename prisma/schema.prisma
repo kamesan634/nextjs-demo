@@ -1,0 +1,1106 @@
+// ===================================
+// 龜三的ERP Demo - Prisma Schema
+// 零售業簡易 ERP 系統資料庫設計
+// ===================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================================
+// 系統管理模組
+// ===================================
+
+// 使用者資料表
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique               // 登入帳號
+  email         String    @unique               // 電子郵件
+  password      String                          // 密碼 (bcrypt 雜湊)
+  name          String                          // 顯示名稱
+  avatar        String?                         // 頭像 URL
+  phone         String?                         // 聯絡電話
+  isActive      Boolean   @default(true)        // 是否啟用
+  lastLoginAt   DateTime?                       // 最後登入時間
+  createdAt     DateTime  @default(now())       // 建立時間
+  updatedAt     DateTime  @updatedAt            // 更新時間
+
+  // 關聯
+  role          Role      @relation(fields: [roleId], references: [id])
+  roleId        String                          // 角色 ID
+  store         Store?    @relation(fields: [storeId], references: [id])
+  storeId       String?                         // 所屬門市 ID (可為空)
+
+  // 反向關聯
+  orders        Order[]                         // 建立的訂單
+  auditLogs     AuditLog[]                      // 操作日誌
+  createdProducts Product[] @relation("ProductCreator")
+  updatedProducts Product[] @relation("ProductUpdater")
+
+  @@map("users")
+}
+
+// 角色資料表
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique               // 角色代碼 (ADMIN, MANAGER, CASHIER, etc.)
+  name        String                         // 角色名稱
+  description String?                        // 角色描述
+  isSystem    Boolean  @default(false)       // 是否為系統內建角色
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 關聯
+  permissions RolePermission[]               // 角色權限
+  users       User[]                         // 此角色的使用者
+
+  @@map("roles")
+}
+
+// 角色權限資料表
+model RolePermission {
+  id         String   @id @default(cuid())
+  roleId     String                          // 角色 ID
+  module     String                          // 模組代碼 (products, orders, etc.)
+  action     String                          // 操作類型 (create, read, update, delete)
+  createdAt  DateTime @default(now())
+
+  // 關聯
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module, action])
+  @@map("role_permissions")
+}
+
+// 門市資料表
+model Store {
+  id          String   @id @default(cuid())
+  code        String   @unique               // 門市代碼
+  name        String                         // 門市名稱
+  address     String?                        // 地址
+  phone       String?                        // 電話
+  email       String?                        // 電子郵件
+  manager     String?                        // 店長姓名
+  isActive    Boolean  @default(true)        // 是否啟用
+  openTime    String?                        // 營業開始時間
+  closeTime   String?                        // 營業結束時間
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 關聯
+  users       User[]                         // 門市員工
+  orders      Order[]                        // 門市訂單
+  inventories Inventory[]                    // 門市庫存
+
+  @@map("stores")
+}
+
+// 倉庫資料表
+model Warehouse {
+  id          String   @id @default(cuid())
+  code        String   @unique               // 倉庫代碼
+  name        String                         // 倉庫名稱
+  address     String?                        // 地址
+  phone       String?                        // 電話
+  manager     String?                        // 倉管人員
+  isActive    Boolean  @default(true)        // 是否啟用
+  isDefault   Boolean  @default(false)       // 是否為預設倉庫
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 關聯
+  inventories         Inventory[]            // 倉庫庫存
+  goodsReceipts       GoodsReceipt[]         // 入庫單
+  goodsIssues         GoodsIssue[]           // 出庫單
+  stockCounts         StockCount[]           // 盤點單
+  stockTransfersFrom  StockTransfer[] @relation("FromWarehouse")
+  stockTransfersTo    StockTransfer[] @relation("ToWarehouse")
+  purchaseReceipts    PurchaseReceipt[]      // 採購驗收單
+
+  @@map("warehouses")
+}
+
+// 操作日誌資料表
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String                         // 操作者 ID
+  action      String                         // 操作類型 (CREATE, UPDATE, DELETE)
+  module      String                         // 模組名稱
+  targetId    String?                        // 操作對象 ID
+  targetType  String?                        // 操作對象類型
+  oldData     Json?                          // 變更前資料
+  newData     Json?                          // 變更後資料
+  ipAddress   String?                        // IP 位址
+  userAgent   String?                        // 瀏覽器資訊
+  createdAt   DateTime @default(now())
+
+  // 關聯
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ===================================
+// 基礎資料模組
+// ===================================
+
+// 商品分類資料表
+model Category {
+  id          String     @id @default(cuid())
+  code        String     @unique              // 分類代碼
+  name        String                          // 分類名稱
+  description String?                         // 分類描述
+  parentId    String?                         // 父分類 ID
+  level       Int        @default(1)          // 層級 (1=第一層, 2=第二層, etc.)
+  sortOrder   Int        @default(0)          // 排序順序
+  isActive    Boolean    @default(true)       // 是否啟用
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // 自我關聯
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+
+  // 關聯
+  products    Product[]                       // 此分類下的商品
+
+  @@map("categories")
+}
+
+// 計量單位資料表
+model Unit {
+  id          String    @id @default(cuid())
+  code        String    @unique               // 單位代碼 (PCS, BOX, KG, etc.)
+  name        String                          // 單位名稱
+  description String?                         // 單位描述
+  isActive    Boolean   @default(true)        // 是否啟用
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 關聯
+  products    Product[]                       // 使用此單位的商品
+
+  @@map("units")
+}
+
+// 稅別資料表
+model TaxType {
+  id          String    @id @default(cuid())
+  code        String    @unique               // 稅別代碼
+  name        String                          // 稅別名稱
+  rate        Decimal   @db.Decimal(5, 4)     // 稅率 (例: 0.05 = 5%)
+  description String?                         // 稅別描述
+  isActive    Boolean   @default(true)        // 是否啟用
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 關聯
+  products    Product[]                       // 使用此稅別的商品
+
+  @@map("tax_types")
+}
+
+// 付款方式資料表
+model PaymentMethod {
+  id          String    @id @default(cuid())
+  code        String    @unique               // 付款方式代碼
+  name        String                          // 付款方式名稱
+  description String?                         // 付款方式描述
+  isActive    Boolean   @default(true)        // 是否啟用
+  sortOrder   Int       @default(0)           // 排序順序
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 關聯
+  payments    Payment[]                       // 使用此付款方式的付款紀錄
+
+  @@map("payment_methods")
+}
+
+// ===================================
+// 商品管理模組
+// ===================================
+
+// 商品主檔資料表
+model Product {
+  id              String    @id @default(cuid())
+  sku             String    @unique           // 商品編號 (Stock Keeping Unit)
+  barcode         String?   @unique           // 主要條碼
+  name            String                      // 商品名稱
+  shortName       String?                     // 商品簡稱
+  description     String?                     // 商品描述
+  specification   String?                     // 規格說明
+
+  // 價格資訊
+  costPrice       Decimal   @db.Decimal(12, 2) @default(0)  // 成本價
+  listPrice       Decimal   @db.Decimal(12, 2) @default(0)  // 定價
+  sellingPrice    Decimal   @db.Decimal(12, 2) @default(0)  // 售價
+  minPrice        Decimal?  @db.Decimal(12, 2)              // 最低售價
+
+  // 庫存設定
+  safetyStock     Int       @default(0)       // 安全庫存量
+  reorderPoint    Int       @default(0)       // 補貨點
+  reorderQty      Int       @default(0)       // 建議補貨量
+
+  // 屬性
+  isActive        Boolean   @default(true)    // 是否啟用
+  isSerialControl Boolean   @default(false)   // 是否序號管理
+  isBatchControl  Boolean   @default(false)   // 是否批號管理
+  allowNegativeStock Boolean @default(false)  // 是否允許負庫存
+
+  // 圖片
+  imageUrl        String?                     // 商品圖片 URL
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  updatedById     String?                     // 更新者 ID
+
+  // 關聯
+  category        Category  @relation(fields: [categoryId], references: [id])
+  categoryId      String                      // 分類 ID
+  unit            Unit      @relation(fields: [unitId], references: [id])
+  unitId          String                      // 計量單位 ID
+  taxType         TaxType?  @relation(fields: [taxTypeId], references: [id])
+  taxTypeId       String?                     // 稅別 ID
+  createdBy       User?     @relation("ProductCreator", fields: [createdById], references: [id])
+  updatedBy       User?     @relation("ProductUpdater", fields: [updatedById], references: [id])
+
+  // 反向關聯
+  variants        ProductVariant[]            // 商品規格
+  barcodes        ProductBarcode[]            // 額外條碼
+  supplierPrices  SupplierPrice[]             // 供應商價格
+  inventories     Inventory[]                 // 庫存
+  inventoryMovements InventoryMovement[]      // 庫存異動
+  orderItems      OrderItem[]                 // 訂單明細
+  refundItems     RefundItem[]                // 退貨明細
+  purchaseOrderItems PurchaseOrderItem[]      // 採購單明細
+  goodsReceiptItems GoodsReceiptItem[]        // 入庫單明細
+  goodsIssueItems  GoodsIssueItem[]           // 出庫單明細
+  stockCountItems  StockCountItem[]           // 盤點單明細
+  stockTransferItems StockTransferItem[]      // 調撥單明細
+  stockAdjustments StockAdjustment[]          // 庫存調整
+  promotionProducts PromotionProduct[]        // 促銷商品
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([isActive])
+  @@map("products")
+}
+
+// 商品規格資料表 (多規格商品用)
+model ProductVariant {
+  id          String    @id @default(cuid())
+  productId   String                          // 商品 ID
+  sku         String    @unique               // 規格 SKU
+  name        String                          // 規格名稱 (例: "紅色-L")
+  barcode     String?   @unique               // 規格條碼
+  costPrice   Decimal   @db.Decimal(12, 2) @default(0)
+  sellingPrice Decimal  @db.Decimal(12, 2) @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 關聯
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_variants")
+}
+
+// 商品條碼資料表 (一商品多條碼)
+model ProductBarcode {
+  id          String    @id @default(cuid())
+  productId   String                          // 商品 ID
+  barcode     String    @unique               // 條碼
+  description String?                         // 條碼說明
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  // 關聯
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_barcodes")
+}
+
+// ===================================
+// 供應商管理模組
+// ===================================
+
+// 供應商資料表
+model Supplier {
+  id              String    @id @default(cuid())
+  code            String    @unique           // 供應商代碼
+  name            String                      // 供應商名稱
+  shortName       String?                     // 供應商簡稱
+  contactPerson   String?                     // 聯絡人
+  phone           String?                     // 電話
+  fax             String?                     // 傳真
+  email           String?                     // 電子郵件
+  address         String?                     // 地址
+  taxId           String?                     // 統一編號
+  bankName        String?                     // 銀行名稱
+  bankAccount     String?                     // 銀行帳號
+  paymentTerms    Int       @default(30)      // 付款天數
+  creditLimit     Decimal?  @db.Decimal(12, 2) // 信用額度
+  isActive        Boolean   @default(true)
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 反向關聯
+  prices          SupplierPrice[]             // 供應商價格
+  purchaseOrders  PurchaseOrder[]             // 採購單
+
+  @@map("suppliers")
+}
+
+// 供應商價格資料表
+model SupplierPrice {
+  id              String    @id @default(cuid())
+  supplierId      String                      // 供應商 ID
+  productId       String                      // 商品 ID
+  price           Decimal   @db.Decimal(12, 2) // 進貨價格
+  minQty          Int       @default(1)       // 最小訂購量
+  leadTime        Int       @default(0)       // 交貨天數
+  isPreferred     Boolean   @default(false)   // 是否為首選供應商
+  effectiveFrom   DateTime  @default(now())   // 生效日期
+  effectiveTo     DateTime?                   // 失效日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  supplier        Supplier  @relation(fields: [supplierId], references: [id])
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@unique([supplierId, productId])
+  @@map("supplier_prices")
+}
+
+// ===================================
+// 客戶/會員管理模組
+// ===================================
+
+// 會員等級資料表
+model CustomerLevel {
+  id              String    @id @default(cuid())
+  code            String    @unique           // 等級代碼
+  name            String                      // 等級名稱
+  discountRate    Decimal   @db.Decimal(5, 4) @default(0)  // 折扣率 (例: 0.1 = 9折)
+  pointsMultiplier Decimal  @db.Decimal(5, 2) @default(1)  // 點數倍率
+  minPoints       Int       @default(0)       // 升級所需點數
+  benefits        String?                     // 會員權益描述
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)       // 排序順序
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  customers       Customer[]                  // 此等級的會員
+
+  @@map("customer_levels")
+}
+
+// 客戶/會員資料表
+model Customer {
+  id              String    @id @default(cuid())
+  code            String    @unique           // 會員編號
+  name            String                      // 會員姓名
+  phone           String?   @unique           // 手機號碼
+  email           String?                     // 電子郵件
+  gender          String?                     // 性別 (M/F/O)
+  birthday        DateTime?                   // 生日
+  address         String?                     // 地址
+
+  // 會員資訊
+  totalPoints     Int       @default(0)       // 累計點數
+  availablePoints Int       @default(0)       // 可用點數
+  totalSpent      Decimal   @db.Decimal(12, 2) @default(0)  // 累計消費金額
+  orderCount      Int       @default(0)       // 訂單數量
+
+  // 狀態
+  isActive        Boolean   @default(true)
+  notes           String?                     // 備註
+  joinDate        DateTime  @default(now())   // 加入日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  level           CustomerLevel @relation(fields: [levelId], references: [id])
+  levelId         String                      // 會員等級 ID
+
+  // 反向關聯
+  orders          Order[]                     // 訂單
+  pointsLogs      PointsLog[]                 // 點數紀錄
+  couponUsages    CouponUsage[]               // 優惠券使用紀錄
+
+  @@index([phone])
+  @@index([name])
+  @@map("customers")
+}
+
+// 點數紀錄資料表
+model PointsLog {
+  id              String    @id @default(cuid())
+  customerId      String                      // 會員 ID
+  type            String                      // 類型 (EARN=獲得, REDEEM=兌換, EXPIRE=過期, ADJUST=調整)
+  points          Int                         // 點數 (正數=增加, 負數=減少)
+  balance         Int                         // 異動後餘額
+  orderId         String?                     // 相關訂單 ID
+  description     String?                     // 說明
+  expiryDate      DateTime?                   // 點數到期日
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  order           Order?    @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+  @@index([createdAt])
+  @@map("points_logs")
+}
+
+// ===================================
+// 庫存管理模組
+// ===================================
+
+// 庫存資料表
+model Inventory {
+  id              String    @id @default(cuid())
+  productId       String                      // 商品 ID
+  warehouseId     String?                     // 倉庫 ID
+  storeId         String?                     // 門市 ID
+  quantity        Int       @default(0)       // 庫存數量
+  reservedQty     Int       @default(0)       // 預留數量 (已被訂單預留)
+  availableQty    Int       @default(0)       // 可用數量 (quantity - reservedQty)
+  lastCountDate   DateTime?                   // 最後盤點日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  product         Product   @relation(fields: [productId], references: [id])
+  warehouse       Warehouse? @relation(fields: [warehouseId], references: [id])
+  store           Store?    @relation(fields: [storeId], references: [id])
+
+  @@unique([productId, warehouseId, storeId])
+  @@index([productId])
+  @@map("inventory")
+}
+
+// 庫存異動資料表
+model InventoryMovement {
+  id              String    @id @default(cuid())
+  productId       String                      // 商品 ID
+  movementType    String                      // 異動類型 (IN=入庫, OUT=出庫, ADJUST=調整, TRANSFER=調撥)
+  quantity        Int                         // 異動數量 (正數=增加, 負數=減少)
+  beforeQty       Int                         // 異動前數量
+  afterQty        Int                         // 異動後數量
+  referenceType   String?                     // 來源單據類型 (ORDER, PURCHASE, RECEIPT, etc.)
+  referenceId     String?                     // 來源單據 ID
+  warehouseId     String?                     // 倉庫 ID
+  storeId         String?                     // 門市 ID
+  reason          String?                     // 異動原因
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  createdById     String?                     // 建立者 ID
+
+  // 關聯
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@index([movementType])
+  @@map("inventory_movements")
+}
+
+// 入庫單資料表
+model GoodsReceipt {
+  id              String    @id @default(cuid())
+  receiptNo       String    @unique           // 入庫單號
+  warehouseId     String                      // 入庫倉庫 ID
+  type            String                      // 入庫類型 (PURCHASE=採購入庫, RETURN=退貨入庫, OTHER=其他)
+  status          String    @default("PENDING") // 狀態 (PENDING, COMPLETED, CANCELLED)
+  referenceType   String?                     // 來源單據類型
+  referenceId     String?                     // 來源單據 ID
+  receiptDate     DateTime  @default(now())   // 入庫日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  completedAt     DateTime?                   // 完成時間
+
+  // 關聯
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+
+  // 反向關聯
+  items           GoodsReceiptItem[]          // 入庫單明細
+
+  @@index([status])
+  @@index([receiptDate])
+  @@map("goods_receipts")
+}
+
+// 入庫單明細資料表
+model GoodsReceiptItem {
+  id              String    @id @default(cuid())
+  receiptId       String                      // 入庫單 ID
+  productId       String                      // 商品 ID
+  expectedQty     Int                         // 預期數量
+  receivedQty     Int       @default(0)       // 實收數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  receipt         GoodsReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("goods_receipt_items")
+}
+
+// 出庫單資料表
+model GoodsIssue {
+  id              String    @id @default(cuid())
+  issueNo         String    @unique           // 出庫單號
+  warehouseId     String                      // 出庫倉庫 ID
+  type            String                      // 出庫類型 (SALES=銷售出庫, DAMAGE=報損, OTHER=其他)
+  status          String    @default("PENDING") // 狀態 (PENDING, COMPLETED, CANCELLED)
+  referenceType   String?                     // 來源單據類型
+  referenceId     String?                     // 來源單據 ID
+  issueDate       DateTime  @default(now())   // 出庫日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  completedAt     DateTime?                   // 完成時間
+
+  // 關聯
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+
+  // 反向關聯
+  items           GoodsIssueItem[]            // 出庫單明細
+
+  @@index([status])
+  @@index([issueDate])
+  @@map("goods_issues")
+}
+
+// 出庫單明細資料表
+model GoodsIssueItem {
+  id              String    @id @default(cuid())
+  issueId         String                      // 出庫單 ID
+  productId       String                      // 商品 ID
+  quantity        Int                         // 出庫數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  issue           GoodsIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("goods_issue_items")
+}
+
+// 盤點單資料表
+model StockCount {
+  id              String    @id @default(cuid())
+  countNo         String    @unique           // 盤點單號
+  warehouseId     String                      // 盤點倉庫 ID
+  type            String    @default("FULL")  // 盤點類型 (FULL=全盤, CYCLE=循環盤, SPOT=抽盤)
+  status          String    @default("DRAFT") // 狀態 (DRAFT, IN_PROGRESS, COMPLETED, CANCELLED)
+  countDate       DateTime  @default(now())   // 盤點日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  completedAt     DateTime?                   // 完成時間
+
+  // 關聯
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+
+  // 反向關聯
+  items           StockCountItem[]            // 盤點單明細
+
+  @@index([status])
+  @@index([countDate])
+  @@map("stock_counts")
+}
+
+// 盤點單明細資料表
+model StockCountItem {
+  id              String    @id @default(cuid())
+  countId         String                      // 盤點單 ID
+  productId       String                      // 商品 ID
+  systemQty       Int                         // 系統數量
+  countedQty      Int?                        // 實盤數量
+  diffQty         Int?                        // 差異數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  count           StockCount @relation(fields: [countId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("stock_count_items")
+}
+
+// 調撥單資料表
+model StockTransfer {
+  id              String    @id @default(cuid())
+  transferNo      String    @unique           // 調撥單號
+  fromWarehouseId String                      // 調出倉庫 ID
+  toWarehouseId   String                      // 調入倉庫 ID
+  status          String    @default("PENDING") // 狀態 (PENDING, IN_TRANSIT, COMPLETED, CANCELLED)
+  transferDate    DateTime  @default(now())   // 調撥日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  completedAt     DateTime?                   // 完成時間
+
+  // 關聯
+  fromWarehouse   Warehouse @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse     Warehouse @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+
+  // 反向關聯
+  items           StockTransferItem[]         // 調撥單明細
+
+  @@index([status])
+  @@index([transferDate])
+  @@map("stock_transfers")
+}
+
+// 調撥單明細資料表
+model StockTransferItem {
+  id              String    @id @default(cuid())
+  transferId      String                      // 調撥單 ID
+  productId       String                      // 商品 ID
+  quantity        Int                         // 調撥數量
+  receivedQty     Int       @default(0)       // 已收數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  transfer        StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("stock_transfer_items")
+}
+
+// 庫存調整資料表
+model StockAdjustment {
+  id              String    @id @default(cuid())
+  adjustmentNo    String    @unique           // 調整單號
+  productId       String                      // 商品 ID
+  warehouseId     String?                     // 倉庫 ID
+  storeId         String?                     // 門市 ID
+  type            String                      // 調整類型 (ADD=盤盈, SUBTRACT=盤虧, DAMAGE=報損)
+  quantity        Int                         // 調整數量
+  beforeQty       Int                         // 調整前數量
+  afterQty        Int                         // 調整後數量
+  reason          String?                     // 調整原因
+  status          String    @default("COMPLETED") // 狀態
+  createdAt       DateTime  @default(now())
+  createdById     String?                     // 建立者 ID
+
+  // 關聯
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("stock_adjustments")
+}
+
+// ===================================
+// 銷售管理模組
+// ===================================
+
+// 訂單資料表
+model Order {
+  id              String    @id @default(cuid())
+  orderNo         String    @unique           // 訂單編號
+  storeId         String?                     // 門市 ID
+  customerId      String?                     // 客戶/會員 ID
+  userId          String                      // 建立者 ID (收銀員/業務)
+
+  // 金額資訊
+  subtotal        Decimal   @db.Decimal(12, 2) @default(0)  // 小計
+  discountAmount  Decimal   @db.Decimal(12, 2) @default(0)  // 折扣金額
+  taxAmount       Decimal   @db.Decimal(12, 2) @default(0)  // 稅額
+  totalAmount     Decimal   @db.Decimal(12, 2) @default(0)  // 總金額
+  paidAmount      Decimal   @db.Decimal(12, 2) @default(0)  // 已付金額
+  changeAmount    Decimal   @db.Decimal(12, 2) @default(0)  // 找零金額
+
+  // 點數
+  earnedPoints    Int       @default(0)       // 獲得點數
+  usedPoints      Int       @default(0)       // 使用點數
+  pointsDiscount  Decimal   @db.Decimal(12, 2) @default(0)  // 點數折抵金額
+
+  // 狀態
+  status          String    @default("PENDING") // 狀態 (PENDING, CONFIRMED, COMPLETED, CANCELLED)
+  paymentStatus   String    @default("UNPAID")  // 付款狀態 (UNPAID, PARTIAL, PAID)
+
+  // 優惠
+  promotionId     String?                     // 促銷活動 ID
+  couponId        String?                     // 優惠券 ID
+
+  // 備註
+  notes           String?                     // 訂單備註
+  internalNotes   String?                     // 內部備註
+
+  orderDate       DateTime  @default(now())   // 訂單日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 關聯
+  store           Store?    @relation(fields: [storeId], references: [id])
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+  promotion       Promotion? @relation(fields: [promotionId], references: [id])
+  coupon          Coupon?   @relation(fields: [couponId], references: [id])
+
+  // 反向關聯
+  items           OrderItem[]                 // 訂單明細
+  payments        Payment[]                   // 付款紀錄
+  refunds         Refund[]                    // 退貨單
+  pointsLogs      PointsLog[]                 // 點數紀錄
+
+  @@index([orderNo])
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("orders")
+}
+
+// 訂單明細資料表
+model OrderItem {
+  id              String    @id @default(cuid())
+  orderId         String                      // 訂單 ID
+  productId       String                      // 商品 ID
+  productName     String                      // 商品名稱 (快照)
+  productSku      String                      // 商品編號 (快照)
+  quantity        Int                         // 數量
+  unitPrice       Decimal   @db.Decimal(12, 2) // 單價
+  discount        Decimal   @db.Decimal(12, 2) @default(0)  // 折扣金額
+  subtotal        Decimal   @db.Decimal(12, 2) // 小計
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// 付款紀錄資料表
+model Payment {
+  id              String    @id @default(cuid())
+  orderId         String                      // 訂單 ID
+  paymentMethodId String                      // 付款方式 ID
+  amount          Decimal   @db.Decimal(12, 2) // 付款金額
+  status          String    @default("COMPLETED") // 狀態 (PENDING, COMPLETED, FAILED, REFUNDED)
+  referenceNo     String?                     // 參考編號 (信用卡授權碼等)
+  notes           String?                     // 備註
+  paidAt          DateTime  @default(now())   // 付款時間
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  order           Order     @relation(fields: [orderId], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  @@map("payments")
+}
+
+// 退貨單資料表
+model Refund {
+  id              String    @id @default(cuid())
+  refundNo        String    @unique           // 退貨單號
+  orderId         String                      // 原訂單 ID
+  reason          String                      // 退貨原因
+  status          String    @default("PENDING") // 狀態 (PENDING, APPROVED, COMPLETED, REJECTED)
+  subtotal        Decimal   @db.Decimal(12, 2) @default(0)  // 退貨小計
+  refundAmount    Decimal   @db.Decimal(12, 2) @default(0)  // 退款金額
+  pointsReturned  Int       @default(0)       // 退還點數
+  notes           String?                     // 備註
+  refundDate      DateTime  @default(now())   // 退貨日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  approvedAt      DateTime?                   // 核准時間
+
+  // 關聯
+  order           Order     @relation(fields: [orderId], references: [id])
+
+  // 反向關聯
+  items           RefundItem[]                // 退貨明細
+
+  @@index([orderId])
+  @@index([status])
+  @@map("refunds")
+}
+
+// 退貨明細資料表
+model RefundItem {
+  id              String    @id @default(cuid())
+  refundId        String                      // 退貨單 ID
+  productId       String                      // 商品 ID
+  productName     String                      // 商品名稱 (快照)
+  quantity        Int                         // 退貨數量
+  unitPrice       Decimal   @db.Decimal(12, 2) // 退貨單價
+  subtotal        Decimal   @db.Decimal(12, 2) // 小計
+  reason          String?                     // 退貨原因
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  refund          Refund    @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("refund_items")
+}
+
+// ===================================
+// 促銷管理模組
+// ===================================
+
+// 促銷活動資料表
+model Promotion {
+  id              String    @id @default(cuid())
+  code            String    @unique           // 促銷代碼
+  name            String                      // 促銷名稱
+  description     String?                     // 促銷描述
+  type            String                      // 促銷類型 (DISCOUNT=折扣, BUNDLE=組合, GIFT=贈品, POINTS=點數加倍)
+  discountType    String?                     // 折扣類型 (PERCENTAGE=百分比, AMOUNT=固定金額)
+  discountValue   Decimal?  @db.Decimal(12, 2) // 折扣值
+  minPurchase     Decimal?  @db.Decimal(12, 2) // 最低消費金額
+  maxDiscount     Decimal?  @db.Decimal(12, 2) // 最高折扣金額
+  usageLimit      Int?                        // 使用次數限制
+  usedCount       Int       @default(0)       // 已使用次數
+  isActive        Boolean   @default(true)
+  startDate       DateTime                    // 開始日期
+  endDate         DateTime                    // 結束日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 反向關聯
+  products        PromotionProduct[]          // 促銷商品
+  orders          Order[]                     // 使用此促銷的訂單
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("promotions")
+}
+
+// 促銷商品資料表
+model PromotionProduct {
+  id              String    @id @default(cuid())
+  promotionId     String                      // 促銷活動 ID
+  productId       String                      // 商品 ID
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  promotion       Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@unique([promotionId, productId])
+  @@map("promotion_products")
+}
+
+// 優惠券資料表
+model Coupon {
+  id              String    @id @default(cuid())
+  code            String    @unique           // 優惠券代碼
+  name            String                      // 優惠券名稱
+  description     String?                     // 優惠券描述
+  discountType    String                      // 折扣類型 (PERCENTAGE=百分比, AMOUNT=固定金額)
+  discountValue   Decimal   @db.Decimal(12, 2) // 折扣值
+  minPurchase     Decimal?  @db.Decimal(12, 2) // 最低消費金額
+  maxDiscount     Decimal?  @db.Decimal(12, 2) // 最高折扣金額
+  usageLimit      Int?                        // 總使用次數限制
+  perUserLimit    Int       @default(1)       // 每人使用次數限制
+  usedCount       Int       @default(0)       // 已使用次數
+  isActive        Boolean   @default(true)
+  startDate       DateTime                    // 開始日期
+  endDate         DateTime                    // 結束日期
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 反向關聯
+  usages          CouponUsage[]               // 使用紀錄
+  orders          Order[]                     // 使用此優惠券的訂單
+
+  @@index([code])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+// 優惠券使用紀錄資料表
+model CouponUsage {
+  id              String    @id @default(cuid())
+  couponId        String                      // 優惠券 ID
+  customerId      String                      // 客戶 ID
+  orderId         String?                     // 訂單 ID
+  usedAt          DateTime  @default(now())   // 使用時間
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  coupon          Coupon    @relation(fields: [couponId], references: [id])
+  customer        Customer  @relation(fields: [customerId], references: [id])
+
+  @@map("coupon_usages")
+}
+
+// ===================================
+// 採購管理模組
+// ===================================
+
+// 採購單資料表
+model PurchaseOrder {
+  id              String    @id @default(cuid())
+  orderNo         String    @unique           // 採購單號
+  supplierId      String                      // 供應商 ID
+  status          String    @default("DRAFT") // 狀態 (DRAFT, PENDING, APPROVED, ORDERED, PARTIAL, COMPLETED, CANCELLED)
+
+  // 金額資訊
+  subtotal        Decimal   @db.Decimal(12, 2) @default(0)  // 小計
+  taxAmount       Decimal   @db.Decimal(12, 2) @default(0)  // 稅額
+  totalAmount     Decimal   @db.Decimal(12, 2) @default(0)  // 總金額
+
+  // 日期
+  orderDate       DateTime  @default(now())   // 採購日期
+  expectedDate    DateTime?                   // 預計到貨日
+
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  approvedAt      DateTime?                   // 核准時間
+  approvedById    String?                     // 核准者 ID
+
+  // 關聯
+  supplier        Supplier  @relation(fields: [supplierId], references: [id])
+
+  // 反向關聯
+  items           PurchaseOrderItem[]         // 採購單明細
+  receipts        PurchaseReceipt[]           // 驗收單
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("purchase_orders")
+}
+
+// 採購單明細資料表
+model PurchaseOrderItem {
+  id              String    @id @default(cuid())
+  orderId         String                      // 採購單 ID
+  productId       String                      // 商品 ID
+  productName     String                      // 商品名稱 (快照)
+  productSku      String                      // 商品編號 (快照)
+  quantity        Int                         // 採購數量
+  unitPrice       Decimal   @db.Decimal(12, 2) // 單價
+  subtotal        Decimal   @db.Decimal(12, 2) // 小計
+  receivedQty     Int       @default(0)       // 已收數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  order           PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+// 採購驗收單資料表
+model PurchaseReceipt {
+  id              String    @id @default(cuid())
+  receiptNo       String    @unique           // 驗收單號
+  purchaseOrderId String                      // 採購單 ID
+  warehouseId     String                      // 入庫倉庫 ID
+  status          String    @default("PENDING") // 狀態 (PENDING, COMPLETED, CANCELLED)
+  receiptDate     DateTime  @default(now())   // 驗收日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  completedAt     DateTime?                   // 完成時間
+
+  // 關聯
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+
+  // 反向關聯
+  items           PurchaseReceiptItem[]       // 驗收單明細
+
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@map("purchase_receipts")
+}
+
+// 採購驗收單明細資料表
+model PurchaseReceiptItem {
+  id              String    @id @default(cuid())
+  receiptId       String                      // 驗收單 ID
+  productId       String                      // 商品 ID
+  expectedQty     Int                         // 預期數量
+  receivedQty     Int                         // 實收數量
+  acceptedQty     Int                         // 合格數量
+  rejectedQty     Int       @default(0)       // 不合格數量
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  receipt         PurchaseReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_receipt_items")
+}
+
+// 採購退貨單資料表
+model PurchaseReturn {
+  id              String    @id @default(cuid())
+  returnNo        String    @unique           // 退貨單號
+  purchaseOrderId String?                     // 原採購單 ID
+  supplierId      String                      // 供應商 ID
+  status          String    @default("PENDING") // 狀態 (PENDING, APPROVED, COMPLETED, REJECTED)
+  reason          String                      // 退貨原因
+  subtotal        Decimal   @db.Decimal(12, 2) @default(0)  // 退貨小計
+  returnDate      DateTime  @default(now())   // 退貨日期
+  notes           String?                     // 備註
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?                     // 建立者 ID
+  approvedAt      DateTime?                   // 核准時間
+
+  // 反向關聯
+  items           PurchaseReturnItem[]        // 退貨明細
+
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_returns")
+}
+
+// 採購退貨明細資料表
+model PurchaseReturnItem {
+  id              String    @id @default(cuid())
+  returnId        String                      // 退貨單 ID
+  productId       String                      // 商品 ID
+  productName     String                      // 商品名稱 (快照)
+  quantity        Int                         // 退貨數量
+  unitPrice       Decimal   @db.Decimal(12, 2) // 單價
+  subtotal        Decimal   @db.Decimal(12, 2) // 小計
+  reason          String?                     // 退貨原因
+  createdAt       DateTime  @default(now())
+
+  // 關聯
+  purchaseReturn  PurchaseReturn @relation(fields: [returnId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_return_items")
+}
