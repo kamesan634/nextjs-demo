@@ -1,5 +1,7 @@
 # 龜三的ERP Demo - Next.js 全端專案
 
+![CI](https://github.com/kamesan634/nextjs-demo/actions/workflows/ci.yml/badge.svg)
+
 基於 TypeScript + Next.js 15 + React 19 的零售業 ERP 系統全端 Web 應用。
 
 ## 技能樹 請點以下技能
