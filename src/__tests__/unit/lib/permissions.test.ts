@@ -29,8 +29,8 @@ describe('permissionModules (權限模組清單)', () => {
 
   it('每個模組應該有 code 和 name 屬性', () => {
     for (const mod of permissionModules) {
-      expect(module).toHaveProperty('code')
-      expect(module).toHaveProperty('name')
+      expect(mod).toHaveProperty('code')
+      expect(mod).toHaveProperty('name')
       expect(typeof mod.code).toBe('string')
       expect(typeof mod.name).toBe('string')
       expect(mod.code.length).toBeGreaterThan(0)

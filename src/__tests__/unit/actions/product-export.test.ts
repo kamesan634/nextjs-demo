@@ -35,6 +35,14 @@ describe('Product Export Server Actions', () => {
 
   // ===== exportProducts 測試 =====
   describe('exportProducts', () => {
+    // Mock Decimal 物件需要能被 Number() 正確轉換
+    // Prisma Decimal 有 valueOf() 方法，Number() 會調用它
+    const createDecimal = (value: number) => ({
+      toNumber: () => value,
+      valueOf: () => value,
+      toString: () => String(value),
+    })
+
     const mockProducts = [
       {
         id: '1',
@@ -44,9 +52,9 @@ describe('Product Export Server Actions', () => {
         shortName: '商品1',
         categoryId: 'cat1',
         unitId: 'unit1',
-        costPrice: { toNumber: () => 50 },
-        listPrice: { toNumber: () => 120 },
-        sellingPrice: { toNumber: () => 100 },
+        costPrice: createDecimal(50),
+        listPrice: createDecimal(120),
+        sellingPrice: createDecimal(100),
         safetyStock: 10,
         reorderPoint: 5,
         reorderQty: 20,
@@ -62,9 +70,9 @@ describe('Product Export Server Actions', () => {
         shortName: null,
         categoryId: 'cat1',
         unitId: 'unit1',
-        costPrice: { toNumber: () => 80 },
-        listPrice: { toNumber: () => 200 },
-        sellingPrice: { toNumber: () => 180 },
+        costPrice: createDecimal(80),
+        listPrice: createDecimal(200),
+        sellingPrice: createDecimal(180),
         safetyStock: 5,
         reorderPoint: 2,
         reorderQty: 10,

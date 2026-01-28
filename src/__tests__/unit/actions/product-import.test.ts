@@ -3,7 +3,7 @@
  * 測試商品匯入相關的 Server Actions
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
 import { importProducts } from '@/actions/product-import'
 import prisma from '@/lib/prisma'
 import * as excelLib from '@/lib/excel'
@@ -27,6 +27,26 @@ vi.mock('@/lib/excel', () => ({
     description: '描述',
   },
 }))
+
+// Polyfill File.prototype.arrayBuffer for Node.js test environment
+const originalArrayBuffer = File.prototype.arrayBuffer
+beforeAll(() => {
+  if (!File.prototype.arrayBuffer) {
+    File.prototype.arrayBuffer = function () {
+      return new Promise((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as ArrayBuffer)
+        reader.readAsArrayBuffer(this)
+      })
+    }
+  }
+})
+
+afterAll(() => {
+  if (originalArrayBuffer) {
+    File.prototype.arrayBuffer = originalArrayBuffer
+  }
+})
 
 // Helper function to create mock FormData with file
 function createMockFormData(fileContent?: ArrayBuffer, fileName?: string): FormData {

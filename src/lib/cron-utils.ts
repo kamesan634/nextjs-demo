@@ -16,22 +16,31 @@ export function calculateNextRunAt(cronExpression: string): Date {
   const dayOfMonth = parts[2]
   const dayOfWeek = parts[4]
 
-  next.setHours(hour, minute, 0, 0)
-
-  // 如果時間已過，移到下一個執行週期
-  if (next <= now) {
-    if (dayOfMonth !== '*') {
-      // 每月特定日期
+  if (dayOfMonth !== '*') {
+    // 每月特定日期
+    const targetDate = parseInt(dayOfMonth)
+    next.setDate(targetDate)
+    next.setHours(hour, minute, 0, 0)
+    // 如果這個時間已過，移到下個月
+    if (next <= now) {
       next.setMonth(next.getMonth() + 1)
-      next.setDate(parseInt(dayOfMonth))
-    } else if (dayOfWeek !== '*') {
-      // 每週特定星期
-      const targetDay = parseInt(dayOfWeek)
-      const currentDay = next.getDay()
-      const daysUntilTarget = (targetDay - currentDay + 7) % 7 || 7
-      next.setDate(next.getDate() + daysUntilTarget)
-    } else {
-      // 每天
+      next.setDate(targetDate)
+    }
+  } else if (dayOfWeek !== '*') {
+    // 每週特定星期
+    const targetDay = parseInt(dayOfWeek)
+    next.setHours(hour, minute, 0, 0)
+    const currentDay = next.getDay()
+    let daysUntilTarget = (targetDay - currentDay + 7) % 7
+    // 如果是今天但時間已過，加 7 天
+    if (daysUntilTarget === 0 && next <= now) {
+      daysUntilTarget = 7
+    }
+    next.setDate(next.getDate() + daysUntilTarget)
+  } else {
+    // 每天
+    next.setHours(hour, minute, 0, 0)
+    if (next <= now) {
       next.setDate(next.getDate() + 1)
     }
   }

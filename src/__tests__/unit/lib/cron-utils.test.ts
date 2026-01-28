@@ -11,11 +11,10 @@ import { calculateNextRunAt, parseCronToReadable, commonCronExpressions } from '
 // ===================================
 
 describe('calculateNextRunAt', () => {
-  let mockDate: Date
-
   beforeEach(() => {
-    // 固定時間: 2024-06-15 10:30:00 (週六)
-    mockDate = new Date('2024-06-15T10:30:00.000Z')
+    // 固定時間: 2024-06-15 10:30:00 (週六) - 使用本地時間
+    // 注意：使用 new Date(year, month, day, hour, minute) 建立本地時間
+    const mockDate = new Date(2024, 5, 15, 10, 30, 0) // 月份從 0 開始，5 = 6 月
     vi.useFakeTimers()
     vi.setSystemTime(mockDate)
   })
@@ -132,8 +131,8 @@ describe('calculateNextRunAt', () => {
     })
 
     it('應該處理當前時間剛好等於執行時間', () => {
-      // 設定系統時間為剛好 10:30
-      vi.setSystemTime(new Date('2024-06-15T10:30:00.000Z'))
+      // 設定系統時間為剛好 10:30 (本地時間)
+      vi.setSystemTime(new Date(2024, 5, 15, 10, 30, 0))
 
       const result = calculateNextRunAt('30 10 * * *')
 
@@ -368,7 +367,7 @@ describe('commonCronExpressions', () => {
 describe('Cron Utils - 整合測試', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2024-06-15T10:30:00.000Z'))
+    vi.setSystemTime(new Date(2024, 5, 15, 10, 30, 0))
   })
 
   afterEach(() => {
@@ -427,8 +426,8 @@ describe('Cron Utils - 邊界條件和錯誤處理', () => {
   })
 
   it('年末跨年的執行時間計算', () => {
-    // 設定為 2024-12-31 23:30
-    vi.setSystemTime(new Date('2024-12-31T23:30:00.000Z'))
+    // 設定為 2024-12-31 23:30 (本地時間)
+    vi.setSystemTime(new Date(2024, 11, 31, 23, 30, 0))
 
     const result = calculateNextRunAt('0 8 * * *')
 
@@ -439,8 +438,8 @@ describe('Cron Utils - 邊界條件和錯誤處理', () => {
   })
 
   it('月末跨月的執行時間計算', () => {
-    // 設定為 2024-01-31 23:30
-    vi.setSystemTime(new Date('2024-01-31T23:30:00.000Z'))
+    // 設定為 2024-01-31 23:30 (本地時間)
+    vi.setSystemTime(new Date(2024, 0, 31, 23, 30, 0))
 
     const result = calculateNextRunAt('0 8 * * *')
 
@@ -450,8 +449,8 @@ describe('Cron Utils - 邊界條件和錯誤處理', () => {
   })
 
   it('閏年 2 月的處理', () => {
-    // 設定為 2024-02-28 (閏年)
-    vi.setSystemTime(new Date('2024-02-28T23:30:00.000Z'))
+    // 設定為 2024-02-28 23:30 (閏年，本地時間)
+    vi.setSystemTime(new Date(2024, 1, 28, 23, 30, 0))
 
     const result = calculateNextRunAt('0 8 * * *')
 
@@ -461,8 +460,8 @@ describe('Cron Utils - 邊界條件和錯誤處理', () => {
   })
 
   it('非閏年 2 月的處理', () => {
-    // 設定為 2023-02-28 (非閏年)
-    vi.setSystemTime(new Date('2023-02-28T23:30:00.000Z'))
+    // 設定為 2023-02-28 23:30 (非閏年，本地時間)
+    vi.setSystemTime(new Date(2023, 1, 28, 23, 30, 0))
 
     const result = calculateNextRunAt('0 8 * * *')
 
