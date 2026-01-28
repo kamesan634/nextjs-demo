@@ -30,7 +30,7 @@ describe('Header', () => {
     username: 'testuser',
     name: '測試使用者',
     email: 'test@example.com',
-    role: { code: 'ADMIN', name: '管理員' },
+    role: { id: 'role-1', code: 'ADMIN', name: '管理員' },
     avatar: null,
   }
 
@@ -82,7 +82,7 @@ describe('Header', () => {
   it('有門市資訊時應顯示門市名稱', async () => {
     const userWithStore: UserSession = {
       ...mockUser,
-      store: { id: 'store-1', name: '台北門市' },
+      store: { id: 'store-1', code: 'STORE001', name: '台北門市' },
     }
     const { user } = render(<Header user={userWithStore} />)
 

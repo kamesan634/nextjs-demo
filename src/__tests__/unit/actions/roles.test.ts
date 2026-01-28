@@ -106,7 +106,7 @@ describe('Roles Server Actions', () => {
 
       expect(result.success).toBe(true)
       expect(result.message).toBe('角色建立成功')
-      expect(result.data?.id).toBe('new-id')
+      expect((result.data as { id: string })?.id).toBe('new-id')
     })
 
     it('應正確建立角色權限', async () => {

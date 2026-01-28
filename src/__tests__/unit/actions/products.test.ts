@@ -205,7 +205,7 @@ describe('Products Server Actions', () => {
 
       expect(result.success).toBe(true)
       expect(result.message).toBe('商品建立成功')
-      expect(result.data?.id).toBe('new-id')
+      expect((result.data as { id: string })?.id).toBe('new-id')
     })
 
     it('SKU 重複時應回傳錯誤', async () => {
