@@ -3,6 +3,7 @@
  * 測試掛單管理相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   createHoldOrder,
@@ -198,8 +199,8 @@ describe('Hold Orders Server Actions', () => {
       const result = await getHoldOrders({ page: 1, pageSize: 20 })
 
       expect(result.success).toBe(true)
-      expect(result.data?.holdOrders).toHaveLength(1)
-      expect(result.data?.pagination).toEqual({
+      expect((result.data as any)?.holdOrders).toHaveLength(1)
+      expect((result.data as any)?.pagination).toEqual({
         page: 1,
         pageSize: 20,
         total: 1,
@@ -252,8 +253,8 @@ describe('Hold Orders Server Actions', () => {
 
       const result = await getHoldOrders()
 
-      expect(result.data?.pagination.page).toBe(1)
-      expect(result.data?.pagination.pageSize).toBe(20)
+      expect((result.data as any)?.pagination.page).toBe(1)
+      expect((result.data as any)?.pagination.pageSize).toBe(20)
     })
 
     it('應正確計算分頁資訊', async () => {
@@ -262,7 +263,7 @@ describe('Hold Orders Server Actions', () => {
 
       const result = await getHoldOrders({ page: 2, pageSize: 20 })
 
-      expect(result.data?.pagination.totalPages).toBe(3)
+      expect((result.data as any)?.pagination.totalPages).toBe(3)
     })
 
     it('資料庫錯誤時應回傳失敗', async () => {
@@ -450,7 +451,7 @@ describe('Hold Orders Server Actions', () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toBeDefined()
-      expect(result.data?.items).toHaveLength(1)
+      expect((result.data as any)?.items).toHaveLength(1)
     })
 
     it('掛單不存在時應回傳錯誤', async () => {

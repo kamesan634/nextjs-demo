@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@/__tests__/utils/test-utils'
+import { render } from '@/__tests__/utils/test-utils'
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 
 describe('DataTableSkeleton', () => {

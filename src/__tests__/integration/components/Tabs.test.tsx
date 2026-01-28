@@ -383,22 +383,6 @@ describe('Tabs 元件', () => {
 
   describe('受控模式', () => {
     it('應該支援受控的 value', async () => {
-      const ControlledTabs = () => {
-        const [value, setValue] = vi
-          .importActual<{ useState: typeof import('react').useState }>('react')
-          .then((m) => m.useState('tab1'))
-        return (
-          <Tabs value="tab1">
-            <TabsList>
-              <TabsTrigger value="tab1">標籤 1</TabsTrigger>
-              <TabsTrigger value="tab2">標籤 2</TabsTrigger>
-            </TabsList>
-            <TabsContent value="tab1">內容 1</TabsContent>
-            <TabsContent value="tab2">內容 2</TabsContent>
-          </Tabs>
-        )
-      }
-
       render(
         <Tabs value="tab2">
           <TabsList>

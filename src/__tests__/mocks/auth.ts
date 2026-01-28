@@ -45,10 +45,12 @@ export function resetAuthMocks() {
   mockRevalidatePath.mockReset()
 }
 
-export default {
+const authMocks = {
   mockSignIn,
   mockSignOut,
   mockRevalidatePath,
   MockAuthError,
   resetAuthMocks,
 }
+
+export default authMocks

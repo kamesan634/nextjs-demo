@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 import { InventoryTable } from './inventory-table'
 import { getInventoryList, getInventoryStats } from '@/actions/inventory'

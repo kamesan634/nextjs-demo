@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, within } from '../../utils/test-utils'
+import { render, screen } from '../../utils/test-utils'
 import {
   Table,
   TableHeader,

@@ -4,13 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  calculateRFM,
-  getRFMSegment,
-  segmentInfo,
-  type CustomerRFMData,
-  type CustomerRFMScore,
-} from '@/lib/rfm-analysis'
+import { calculateRFM, getRFMSegment, segmentInfo, type CustomerRFMData } from '@/lib/rfm-analysis'
 
 // ===================================
 // 測試資料準備

@@ -69,11 +69,15 @@ export function RefundForm({ orderId, products = [] }: RefundFormProps) {
     setItems(items.filter((item) => item.id !== id))
   }
 
-  const handleItemChange = (id: string, field: keyof RefundItem, value: string | number) => {
+  const handleItemChange = (
+    id: string,
+    field: keyof RefundItem,
+    value: RefundItem[keyof RefundItem]
+  ) => {
     setItems(
       items.map((item) => {
         if (item.id === id) {
-          if (field === 'productId') {
+          if (field === 'productId' && typeof value === 'string') {
             const product = products.find((p) => p.id === value)
             if (product) {
               return {

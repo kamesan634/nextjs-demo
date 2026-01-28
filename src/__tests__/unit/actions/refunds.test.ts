@@ -3,6 +3,7 @@
  * 測試退貨單管理相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createRefund, getRefunds, getRefund, approveRefund, deleteRefund } from '@/actions/refunds'
 import prisma from '@/lib/prisma'
@@ -181,8 +182,8 @@ describe('Refunds Server Actions', () => {
       const result = await getRefunds({ page: 1, pageSize: 20 })
 
       expect(result.success).toBe(true)
-      expect(result.data?.refunds).toHaveLength(1)
-      expect(result.data?.pagination.total).toBe(1)
+      expect((result.data as any)?.refunds).toHaveLength(1)
+      expect((result.data as any)?.pagination.total).toBe(1)
     })
 
     it('應支援訂單篩選', async () => {
@@ -248,8 +249,8 @@ describe('Refunds Server Actions', () => {
 
       const result = await getRefunds()
 
-      expect(result.data?.pagination.page).toBe(1)
-      expect(result.data?.pagination.pageSize).toBe(20)
+      expect((result.data as any)?.pagination.page).toBe(1)
+      expect((result.data as any)?.pagination.pageSize).toBe(20)
     })
 
     it('應正確計算分頁資訊', async () => {
@@ -258,7 +259,7 @@ describe('Refunds Server Actions', () => {
 
       const result = await getRefunds({ page: 2, pageSize: 20 })
 
-      expect(result.data?.pagination.totalPages).toBe(3)
+      expect((result.data as any)?.pagination.totalPages).toBe(3)
     })
 
     it('資料庫錯誤時應回傳失敗', async () => {
@@ -301,8 +302,8 @@ describe('Refunds Server Actions', () => {
       const result = await getRefund('refund-1')
 
       expect(result.success).toBe(true)
-      expect(result.data?.refundNo).toBe('RF-20240115-0001')
-      expect(result.data?.items).toHaveLength(1)
+      expect((result.data as any)?.refundNo).toBe('RF-20240115-0001')
+      expect((result.data as any)?.items).toHaveLength(1)
     })
 
     it('退貨單不存在時應回傳錯誤', async () => {

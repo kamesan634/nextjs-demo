@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@/__tests__/utils/test-utils'
+import { render, screen } from '@/__tests__/utils/test-utils'
 import { DataTablePagination } from '@/components/data-table/data-table-pagination'
 
 describe('DataTablePagination', () => {

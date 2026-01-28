@@ -230,14 +230,14 @@ describe('邊界條件測試', () => {
   })
 
   it('應該能夠安全地遍歷空結果', () => {
-    const nonExistentModules = permissionModules.filter((m) => m.code === 'nonexistent')
+    const nonExistentModules = permissionModules.filter((m) => m.code === ('nonexistent' as string))
     expect(nonExistentModules.length).toBe(0)
 
     // 確認空陣列遍歷不會出錯
     let count = 0
-    for (const _module of nonExistentModules) {
+    nonExistentModules.forEach(() => {
       count++
-    }
+    })
     expect(count).toBe(0)
   })
 })

@@ -3,6 +3,7 @@
  * 測試發票管理相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createInvoice, voidInvoice, getInvoices, getInvoice } from '@/actions/invoices'
 import prisma from '@/lib/prisma'
@@ -322,8 +323,8 @@ describe('Invoices Server Actions', () => {
       const result = await getInvoices({ page: 1, pageSize: 20 })
 
       expect(result.success).toBe(true)
-      expect(result.data?.invoices).toHaveLength(1)
-      expect(result.data?.pagination).toEqual({
+      expect((result.data as any)?.invoices).toHaveLength(1)
+      expect((result.data as any)?.pagination).toEqual({
         page: 1,
         pageSize: 20,
         total: 1,
@@ -397,8 +398,8 @@ describe('Invoices Server Actions', () => {
 
       const result = await getInvoices()
 
-      expect(result.data?.pagination.page).toBe(1)
-      expect(result.data?.pagination.pageSize).toBe(20)
+      expect((result.data as any)?.pagination.page).toBe(1)
+      expect((result.data as any)?.pagination.pageSize).toBe(20)
     })
 
     it('應正確計算分頁資訊', async () => {
@@ -407,7 +408,7 @@ describe('Invoices Server Actions', () => {
 
       const result = await getInvoices({ page: 2, pageSize: 20 })
 
-      expect(result.data?.pagination.totalPages).toBe(3)
+      expect((result.data as any)?.pagination.totalPages).toBe(3)
     })
 
     it('資料庫錯誤時應回傳失敗', async () => {

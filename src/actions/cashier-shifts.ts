@@ -270,9 +270,10 @@ export async function getShifts(params: GetShiftsParams = {}): Promise<ActionRes
     if (status) where.status = status
 
     if (startDate || endDate) {
-      where.startTime = {}
-      if (startDate) where.startTime.gte = startDate
-      if (endDate) where.startTime.lte = endDate
+      const startTimeFilter: { gte?: Date; lte?: Date } = {}
+      if (startDate) startTimeFilter.gte = startDate
+      if (endDate) startTimeFilter.lte = endDate
+      where.startTime = startTimeFilter
     }
 
     const [shifts, total] = await Promise.all([

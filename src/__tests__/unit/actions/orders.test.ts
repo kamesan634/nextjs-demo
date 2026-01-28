@@ -159,15 +159,7 @@ describe('calculatePointsDiscount', () => {
 })
 
 describe('訂單狀態轉換', () => {
-  const ORDER_STATUS = {
-    PENDING: 'PENDING',
-    CONFIRMED: 'CONFIRMED',
-    PROCESSING: 'PROCESSING',
-    COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED',
-  } as const
-
-  type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS]
+  type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED'
 
   const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
     PENDING: ['CONFIRMED', 'CANCELLED'],

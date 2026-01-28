@@ -8,7 +8,6 @@ import {
   calculatePromotion,
   type PromotionInput,
   type CartItemInput,
-  type PromotionResult,
 } from '@/lib/promotion-calculator'
 
 // ===================================

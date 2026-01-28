@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTablePagination } from '@/components/data-table/data-table-pagination'
-import { Progress } from '@/components/ui/progress'
 import type { Decimal } from '@prisma/client/runtime/library'
 
 interface InventoryItem {

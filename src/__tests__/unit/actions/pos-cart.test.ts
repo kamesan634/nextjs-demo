@@ -3,6 +3,7 @@
  * 測試 POS 購物車訂單相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPOSOrder } from '@/actions/pos-cart'
 import prisma from '@/lib/prisma'
@@ -50,36 +51,34 @@ describe('POS Cart Server Actions', () => {
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
       // Mock transaction
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockResolvedValue({
-                id: 'order-1',
-                orderNo: 'ORD-20240115-0001',
-              }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-            inventory: {
-              updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-            },
-            payment: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-          }
-          return callback(txPrisma)
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockResolvedValue({
+              id: 'order-1',
+              orderNo: 'ORD-20240115-0001',
+            }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: {
+            create: vi.fn().mockResolvedValue({}),
+          },
+          inventory: {
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+          },
+          payment: {
+            create: vi.fn().mockResolvedValue({}),
+          },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: {
+            create: vi.fn().mockResolvedValue({}),
+          },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const result = await createPOSOrder(validOrderData)
 
@@ -139,29 +138,27 @@ describe('POS Cart Server Actions', () => {
       } as never)
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
-      let capturedOrderData: Record<string, unknown> | null = null
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockImplementation((data: Record<string, unknown>) => {
-                capturedOrderData = data.data
-                return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
-              }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: { create: vi.fn().mockResolvedValue({}) },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: { create: vi.fn().mockResolvedValue({}) },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: { create: vi.fn().mockResolvedValue({}) },
-          }
-          return callback(txPrisma)
+      let capturedOrderData: any = null
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockImplementation((data: any) => {
+              capturedOrderData = data.data
+              return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
+            }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: { create: vi.fn().mockResolvedValue({}) },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: { create: vi.fn().mockResolvedValue({}) },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: { create: vi.fn().mockResolvedValue({}) },
         }
-      )
+        return callback(txPrisma)
+      })
 
       await createPOSOrder(validOrderData)
 
@@ -180,29 +177,27 @@ describe('POS Cart Server Actions', () => {
       } as never)
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
-      let capturedOrderData: Record<string, unknown> | null = null
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockImplementation((data: Record<string, unknown>) => {
-                capturedOrderData = data.data
-                return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
-              }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: { create: vi.fn().mockResolvedValue({}) },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: { create: vi.fn().mockResolvedValue({}) },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: { create: vi.fn().mockResolvedValue({}) },
-          }
-          return callback(txPrisma)
+      let capturedOrderData: any = null
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockImplementation((data: any) => {
+              capturedOrderData = data.data
+              return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
+            }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: { create: vi.fn().mockResolvedValue({}) },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: { create: vi.fn().mockResolvedValue({}) },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: { create: vi.fn().mockResolvedValue({}) },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const orderWithExtraPayment = {
         ...validOrderData,
@@ -221,30 +216,28 @@ describe('POS Cart Server Actions', () => {
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
       let orderItemCreateCount = 0
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: {
-              create: vi.fn().mockImplementation(() => {
-                orderItemCreateCount++
-                return {}
-              }),
-            },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: { create: vi.fn().mockResolvedValue({}) },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: { create: vi.fn().mockResolvedValue({}) },
-          }
-          return callback(txPrisma)
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: {
+            create: vi.fn().mockImplementation(() => {
+              orderItemCreateCount++
+              return {}
+            }),
+          },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: { create: vi.fn().mockResolvedValue({}) },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: { create: vi.fn().mockResolvedValue({}) },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const multiItemOrder = {
         ...validOrderData,
@@ -282,33 +275,31 @@ describe('POS Cart Server Actions', () => {
 
       let pointsLogCreated = false
       let customerUpdated = false
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: { create: vi.fn().mockResolvedValue({}) },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: { create: vi.fn().mockResolvedValue({}) },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue({ id: 'customer-1', availablePoints: 100 }),
-              update: vi.fn().mockImplementation(() => {
-                customerUpdated = true
-                return {}
-              }),
-            },
-            pointsLog: {
-              create: vi.fn().mockImplementation(() => {
-                pointsLogCreated = true
-                return {}
-              }),
-            },
-          }
-          return callback(txPrisma)
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: { create: vi.fn().mockResolvedValue({}) },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: { create: vi.fn().mockResolvedValue({}) },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue({ id: 'customer-1', availablePoints: 100 }),
+            update: vi.fn().mockImplementation(() => {
+              customerUpdated = true
+              return {}
+            }),
+          },
+          pointsLog: {
+            create: vi.fn().mockImplementation(() => {
+              pointsLogCreated = true
+              return {}
+            }),
+          },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const orderWithCustomer = {
         ...validOrderData,
@@ -329,30 +320,28 @@ describe('POS Cart Server Actions', () => {
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
       let paymentCreateCount = 0
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: { create: vi.fn().mockResolvedValue({}) },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: {
-              create: vi.fn().mockImplementation(() => {
-                paymentCreateCount++
-                return {}
-              }),
-            },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: { create: vi.fn().mockResolvedValue({}) },
-          }
-          return callback(txPrisma)
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockResolvedValue({ id: 'order-1', orderNo: 'ORD-20240115-0001' }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: { create: vi.fn().mockResolvedValue({}) },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: {
+            create: vi.fn().mockImplementation(() => {
+              paymentCreateCount++
+              return {}
+            }),
+          },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: { create: vi.fn().mockResolvedValue({}) },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const multiPaymentOrder = {
         ...validOrderData,
@@ -374,29 +363,27 @@ describe('POS Cart Server Actions', () => {
       } as never)
       vi.mocked(prisma.order.findFirst).mockResolvedValue(null)
 
-      let capturedOrderData: Record<string, unknown> | null = null
-      vi.mocked(prisma.$transaction).mockImplementation(
-        async (callback: (tx: unknown) => Promise<unknown>) => {
-          const txPrisma = {
-            order: {
-              create: vi.fn().mockImplementation((data: Record<string, unknown>) => {
-                capturedOrderData = data.data
-                return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
-              }),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            orderItem: { create: vi.fn().mockResolvedValue({}) },
-            inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-            payment: { create: vi.fn().mockResolvedValue({}) },
-            customer: {
-              findUnique: vi.fn().mockResolvedValue(null),
-              update: vi.fn().mockResolvedValue({}),
-            },
-            pointsLog: { create: vi.fn().mockResolvedValue({}) },
-          }
-          return callback(txPrisma)
+      let capturedOrderData: any = null
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const txPrisma = {
+          order: {
+            create: vi.fn().mockImplementation((data: any) => {
+              capturedOrderData = data.data
+              return { id: 'order-1', orderNo: 'ORD-20240115-0001' }
+            }),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          orderItem: { create: vi.fn().mockResolvedValue({}) },
+          inventory: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          payment: { create: vi.fn().mockResolvedValue({}) },
+          customer: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            update: vi.fn().mockResolvedValue({}),
+          },
+          pointsLog: { create: vi.fn().mockResolvedValue({}) },
         }
-      )
+        return callback(txPrisma)
+      })
 
       const orderWithDiscount = {
         ...validOrderData,

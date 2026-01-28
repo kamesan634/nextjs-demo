@@ -3,6 +3,7 @@
  * 測試收銀班別管理相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   openShift,
@@ -300,8 +301,8 @@ describe('Cashier Shifts Server Actions', () => {
       const result = await getShifts({ page: 1, pageSize: 20 })
 
       expect(result.success).toBe(true)
-      expect(result.data?.shifts).toHaveLength(1)
-      expect(result.data?.pagination).toEqual({
+      expect((result.data as any)?.shifts).toHaveLength(1)
+      expect((result.data as any)?.pagination).toEqual({
         page: 1,
         pageSize: 20,
         total: 1,
@@ -375,8 +376,8 @@ describe('Cashier Shifts Server Actions', () => {
 
       const result = await getShifts()
 
-      expect(result.data?.pagination.page).toBe(1)
-      expect(result.data?.pagination.pageSize).toBe(20)
+      expect((result.data as any)?.pagination.page).toBe(1)
+      expect((result.data as any)?.pagination.pageSize).toBe(20)
     })
 
     it('應正確計算分頁資訊', async () => {
@@ -385,7 +386,7 @@ describe('Cashier Shifts Server Actions', () => {
 
       const result = await getShifts({ page: 2, pageSize: 20 })
 
-      expect(result.data?.pagination.totalPages).toBe(3)
+      expect((result.data as any)?.pagination.totalPages).toBe(3)
     })
 
     it('資料庫錯誤時應回傳失敗', async () => {
