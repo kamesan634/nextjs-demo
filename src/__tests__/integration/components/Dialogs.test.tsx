@@ -562,8 +562,8 @@ describe('AlertDialog 元件', () => {
 
       await waitFor(() => {
         const actionButton = screen.getByRole('button', { name: '刪除' })
-        // AlertDialogAction 會被 Button 包裹，所以檢查父元素的 class
-        expect(actionButton.parentElement).toHaveClass('bg-destructive')
+        // Button 使用 asChild 時，樣式會合併到按鈕元素上
+        expect(actionButton.className).toContain('bg-destructive')
       })
     })
 
@@ -589,7 +589,8 @@ describe('AlertDialog 元件', () => {
 
       await waitFor(() => {
         const cancelButton = screen.getByRole('button', { name: '取消' })
-        expect(cancelButton.parentElement).toHaveClass('hover:bg-accent')
+        // Button 使用 asChild 時，ghost variant 的樣式會合併到按鈕元素上
+        expect(cancelButton.className).toContain('hover:bg-accent')
       })
     })
   })
