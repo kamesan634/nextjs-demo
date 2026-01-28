@@ -227,6 +227,102 @@ export async function updateUser(
 }
 
 /**
+ * 重設使用者密碼
+ */
+export async function resetPassword(id: string, newPassword: string): Promise<ActionResult> {
+  try {
+    const user = await prisma.user.findUnique({ where: { id } })
+
+    if (!user) {
+      return { success: false, message: '使用者不存在' }
+    }
+
+    if (newPassword.length < 6) {
+      return { success: false, message: '密碼長度至少 6 個字元' }
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    })
+
+    revalidatePath('/settings/users')
+
+    return { success: true, message: '密碼重設成功' }
+  } catch (error) {
+    console.error('Reset password error:', error)
+    return { success: false, message: '重設密碼失敗' }
+  }
+}
+
+/**
+ * 鎖定使用者帳號
+ */
+export async function lockAccount(id: string, lockMinutes: number = 30): Promise<ActionResult> {
+  try {
+    const user = await prisma.user.findUnique({ where: { id } })
+
+    if (!user) {
+      return { success: false, message: '使用者不存在' }
+    }
+
+    if (user.username === 'admin') {
+      return { success: false, message: '無法鎖定系統管理員帳號' }
+    }
+
+    const lockedUntil = new Date(Date.now() + lockMinutes * 60 * 1000)
+
+    await prisma.user.update({
+      where: { id },
+      data: { lockedUntil },
+    })
+
+    revalidatePath('/settings/users')
+
+    return { success: true, message: `帳號已鎖定至 ${lockedUntil.toLocaleString('zh-TW')}` }
+  } catch (error) {
+    console.error('Lock account error:', error)
+    return { success: false, message: '鎖定帳號失敗' }
+  }
+}
+
+/**
+ * 解鎖使用者帳號
+ */
+export async function unlockAccount(id: string): Promise<ActionResult> {
+  try {
+    const user = await prisma.user.findUnique({ where: { id } })
+
+    if (!user) {
+      return { success: false, message: '使用者不存在' }
+    }
+
+    await prisma.user.update({
+      where: { id },
+      data: {
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+      },
+    })
+
+    revalidatePath('/settings/users')
+
+    return { success: true, message: '帳號已解鎖' }
+  } catch (error) {
+    console.error('Unlock account error:', error)
+    return { success: false, message: '解鎖帳號失敗' }
+  }
+}
+
+/**
  * 刪除使用者
  */
 export async function deleteUser(id: string): Promise<ActionResult> {

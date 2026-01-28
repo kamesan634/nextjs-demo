@@ -4,6 +4,7 @@
 # Dependencies
 # ===================
 /node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -35,6 +36,11 @@ next-env.d.ts
 # ===================
 /build
 /dist
+
+# ===================
+# Documentation (local only)
+# ===================
+/docs/
 
 # ===================
 # Environment Files
@@ -69,6 +75,8 @@ next-env.d.ts
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
+.claude/
+**/.claude/
 *.swp
 *.swo
 *.swn
@@ -157,6 +165,12 @@ docker-compose.override.yml
 *.pid.lock
 .node_repl_history
 .history/
+
+# Temporary files
+*.tmp
+*.tmp.*
+*.temp
+*~
 
 # Storybook
 storybook-static/

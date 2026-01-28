@@ -40,6 +40,8 @@ export function DeleteDialog({
     setIsLoading(true)
     try {
       await onConfirm()
+    } catch (error) {
+      console.error('Delete operation failed:', error)
     } finally {
       setIsLoading(false)
     }

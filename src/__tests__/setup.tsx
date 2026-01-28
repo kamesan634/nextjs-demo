@@ -108,6 +108,22 @@ export const mockPrisma = {
   taxType: createMockModel(),
   pointsLog: createMockModel(),
   payment: createMockModel(),
+  numberingRule: createMockModel(),
+  auditLog: createMockModel(),
+  pOSSession: createMockModel(),
+  cashierShift: createMockModel(),
+  holdOrder: createMockModel(),
+  invoice: createMockModel(),
+  goodsIssue: createMockModel(),
+  goodsIssueItem: createMockModel(),
+  refund: createMockModel(),
+  refundItem: createMockModel(),
+  systemParameter: createMockModel(),
+  customReport: createMockModel(),
+  scheduledReport: createMockModel(),
+  productBundle: createMockModel(),
+  productBundleItem: createMockModel(),
+  priceRule: createMockModel(),
   $transaction: vi.fn((callback) => {
     if (typeof callback === 'function') {
       return callback(mockPrisma)

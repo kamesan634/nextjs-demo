@@ -32,6 +32,57 @@ import {
 // System schemas
 import { storeSchema, warehouseSchema } from '@/lib/validations/system'
 
+// Cashier Shifts schemas
+import { openShiftSchema, closeShiftSchema } from '@/lib/validations/cashier-shifts'
+
+// Custom Reports schemas
+import {
+  createCustomReportSchema,
+  updateCustomReportSchema,
+} from '@/lib/validations/custom-reports'
+
+// Goods Issues schemas
+import { createGoodsIssueSchema } from '@/lib/validations/goods-issues'
+
+// Hold Orders schemas
+import { createHoldOrderSchema, resumeHoldOrderSchema } from '@/lib/validations/hold-orders'
+
+// Invoices schemas
+import { createInvoiceSchema, voidInvoiceSchema } from '@/lib/validations/invoices'
+
+// Numbering Rules schemas
+import {
+  createNumberingRuleSchema,
+  updateNumberingRuleSchema,
+} from '@/lib/validations/numbering-rules'
+
+// POS schemas
+import { openSessionSchema, closeSessionSchema } from '@/lib/validations/pos'
+
+// Price Rules schemas
+import { createPriceRuleSchema, updatePriceRuleSchema } from '@/lib/validations/price-rules'
+
+// Product Bundles schemas
+import {
+  createProductBundleSchema,
+  updateProductBundleSchema,
+} from '@/lib/validations/product-bundles'
+
+// Refunds schemas
+import { createRefundSchema, approveRefundSchema } from '@/lib/validations/refunds'
+
+// Scheduled Reports schemas
+import {
+  createScheduledReportSchema,
+  updateScheduledReportSchema,
+} from '@/lib/validations/scheduled-reports'
+
+// System Parameters schemas
+import {
+  createSystemParameterSchema,
+  updateSystemParameterSchema,
+} from '@/lib/validations/system-parameters'
+
 // ===================================
 // Auth Validations Tests
 // ===================================
@@ -1256,6 +1307,1758 @@ describe('System Validations', () => {
 
       const result = warehouseSchema.safeParse(validData)
       expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Cashier Shifts Validations Tests
+// ===================================
+
+describe('Cashier Shifts Validations', () => {
+  describe('openShiftSchema', () => {
+    const validOpenShiftData = {
+      sessionId: 'session-1',
+      storeId: 'store-1',
+      openingCash: 1000,
+    }
+
+    it('應該驗證有效的開班資料', () => {
+      const result = openShiftSchema.safeParse(validOpenShiftData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白班別 ID', () => {
+      const invalidData = { ...validOpenShiftData, sessionId: '' }
+
+      const result = openShiftSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.sessionId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕空白店舖 ID', () => {
+      const invalidData = { ...validOpenShiftData, storeId: '' }
+
+      const result = openShiftSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.storeId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕負數的開班金額', () => {
+      const invalidData = { ...validOpenShiftData, openingCash: -100 }
+
+      const result = openShiftSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('邊界值測試：接受開班金額為 0', () => {
+      const validData = { ...validOpenShiftData, openingCash: 0 }
+
+      const result = openShiftSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕缺少必填欄位', () => {
+      const invalidData = { openingCash: 1000 }
+
+      const result = openShiftSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('closeShiftSchema', () => {
+    const validCloseShiftData = {
+      closingCash: 5000,
+      notes: '關班備註',
+    }
+
+    it('應該驗證有效的關班資料', () => {
+      const result = closeShiftSchema.safeParse(validCloseShiftData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕負數的關班金額', () => {
+      const invalidData = { ...validCloseShiftData, closingCash: -100 }
+
+      const result = closeShiftSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供備註', () => {
+      const validData = { closingCash: 5000 }
+
+      const result = closeShiftSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受關班金額為 0', () => {
+      const validData = { ...validCloseShiftData, closingCash: 0 }
+
+      const result = closeShiftSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Custom Reports Validations Tests
+// ===================================
+
+describe('Custom Reports Validations', () => {
+  describe('createCustomReportSchema', () => {
+    const validCustomReportData = {
+      name: '銷售報表',
+      description: '每月銷售分析報表',
+      queryDefinition: {
+        dataSource: 'orders' as const,
+        fields: ['orderNumber', 'totalAmount', 'orderDate'],
+        filters: [{ field: 'status', operator: 'eq' as const, value: 'COMPLETED' }],
+        groupBy: ['orderDate'],
+        orderBy: [{ field: 'totalAmount', direction: 'desc' as const }],
+        limit: 100,
+      },
+      chartConfig: {
+        type: 'bar' as const,
+        xField: 'orderDate',
+        yField: 'totalAmount',
+        title: '銷售趨勢圖',
+      },
+      isPublic: true,
+    }
+
+    it('應該驗證有效的自訂報表資料', () => {
+      const result = createCustomReportSchema.safeParse(validCustomReportData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白報表名稱', () => {
+      const invalidData = { ...validCustomReportData, name: '' }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.name).toBeDefined()
+      }
+    })
+
+    it('應該拒絕超過 100 字元的報表名稱', () => {
+      const invalidData = { ...validCustomReportData, name: '報'.repeat(101) }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 500 字元的描述', () => {
+      const invalidData = { ...validCustomReportData, description: '描'.repeat(501) }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的描述', () => {
+      const validData = { ...validCustomReportData, description: null }
+
+      const result = createCustomReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕無效的資料來源', () => {
+      const invalidData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          dataSource: 'invalid_source',
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的資料來源', () => {
+      const dataSources = [
+        'orders',
+        'products',
+        'customers',
+        'inventory',
+        'purchase_orders',
+      ] as const
+      dataSources.forEach((dataSource) => {
+        const validData = {
+          ...validCustomReportData,
+          queryDefinition: {
+            ...validCustomReportData.queryDefinition,
+            dataSource,
+          },
+        }
+        const result = createCustomReportSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕空白欄位陣列', () => {
+      const invalidData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          fields: [],
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的運算子', () => {
+      const operators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'contains', 'in'] as const
+      operators.forEach((operator) => {
+        const validData = {
+          ...validCustomReportData,
+          queryDefinition: {
+            ...validCustomReportData.queryDefinition,
+            filters: [{ field: 'status', operator, value: 'test' }],
+          },
+        }
+        const result = createCustomReportSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的排序方向', () => {
+      const invalidData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          orderBy: [{ field: 'totalAmount', direction: 'invalid' }],
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕小於 1 的 limit', () => {
+      const invalidData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          limit: 0,
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕大於 10000 的 limit', () => {
+      const invalidData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          limit: 10001,
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的圖表類型', () => {
+      const chartTypes = ['bar', 'line', 'pie', 'table'] as const
+      chartTypes.forEach((type) => {
+        const validData = {
+          ...validCustomReportData,
+          chartConfig: { ...validCustomReportData.chartConfig, type },
+        }
+        const result = createCustomReportSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該允許 null 的圖表設定', () => {
+      const validData = { ...validCustomReportData, chartConfig: null }
+
+      const result = createCustomReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受 limit 為 1', () => {
+      const validData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          limit: 1,
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受 limit 為 10000', () => {
+      const validData = {
+        ...validCustomReportData,
+        queryDefinition: {
+          ...validCustomReportData.queryDefinition,
+          limit: 10000,
+        },
+      }
+
+      const result = createCustomReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updateCustomReportSchema', () => {
+    it('應該與 createCustomReportSchema 有相同的驗證', () => {
+      const validData = {
+        name: '更新的報表名稱',
+        queryDefinition: {
+          dataSource: 'products' as const,
+          fields: ['sku', 'name'],
+          filters: [],
+        },
+        isPublic: false,
+      }
+
+      const result = updateCustomReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Goods Issues Validations Tests
+// ===================================
+
+describe('Goods Issues Validations', () => {
+  describe('createGoodsIssueSchema', () => {
+    const validGoodsIssueData = {
+      warehouseId: 'warehouse-1',
+      type: 'SALES' as const,
+      referenceType: 'ORDER',
+      referenceId: 'order-123',
+      issueDate: '2024-01-15',
+      notes: '出庫備註',
+      items: [{ productId: 'product-1', quantity: 10, notes: '商品備註' }],
+    }
+
+    it('應該驗證有效的出庫單資料', () => {
+      const result = createGoodsIssueSchema.safeParse(validGoodsIssueData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白倉庫 ID', () => {
+      const invalidData = { ...validGoodsIssueData, warehouseId: '' }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.warehouseId).toBeDefined()
+      }
+    })
+
+    it('應該接受所有有效的出庫類型', () => {
+      const types = ['SALES', 'DAMAGE', 'OTHER'] as const
+      types.forEach((type) => {
+        const validData = { ...validGoodsIssueData, type }
+        const result = createGoodsIssueSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的出庫類型', () => {
+      const invalidData = { ...validGoodsIssueData, type: 'INVALID' }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品項目陣列', () => {
+      const invalidData = { ...validGoodsIssueData, items: [] }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕數量小於 1 的項目', () => {
+      const invalidData = {
+        ...validGoodsIssueData,
+        items: [{ productId: 'product-1', quantity: 0, notes: null }],
+      }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品 ID', () => {
+      const invalidData = {
+        ...validGoodsIssueData,
+        items: [{ productId: '', quantity: 10, notes: null }],
+      }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 500 字元的備註', () => {
+      const invalidData = { ...validGoodsIssueData, notes: '備'.repeat(501) }
+
+      const result = createGoodsIssueSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的參考類型', () => {
+      const validData = { ...validGoodsIssueData, referenceType: null }
+
+      const result = createGoodsIssueSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的參考 ID', () => {
+      const validData = { ...validGoodsIssueData, referenceId: null }
+
+      const result = createGoodsIssueSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受數量為 1 的項目', () => {
+      const validData = {
+        ...validGoodsIssueData,
+        items: [{ productId: 'product-1', quantity: 1, notes: null }],
+      }
+
+      const result = createGoodsIssueSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Hold Orders Validations Tests
+// ===================================
+
+describe('Hold Orders Validations', () => {
+  describe('createHoldOrderSchema', () => {
+    const validHoldOrderData = {
+      storeId: 'store-1',
+      items: '[{"productId":"p1","quantity":1}]',
+      subtotal: 1000,
+      discount: 100,
+      totalAmount: 900,
+      reason: '客戶暫時離開',
+      customerId: 'customer-1',
+    }
+
+    it('應該驗證有效的掛單資料', () => {
+      const result = createHoldOrderSchema.safeParse(validHoldOrderData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白店舖 ID', () => {
+      const invalidData = { ...validHoldOrderData, storeId: '' }
+
+      const result = createHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.storeId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕空白商品項目', () => {
+      const invalidData = { ...validHoldOrderData, items: '' }
+
+      const result = createHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的小計金額', () => {
+      const invalidData = { ...validHoldOrderData, subtotal: -100 }
+
+      const result = createHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的折扣金額', () => {
+      const invalidData = { ...validHoldOrderData, discount: -50 }
+
+      const result = createHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的總金額', () => {
+      const invalidData = { ...validHoldOrderData, totalAmount: -100 }
+
+      const result = createHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供原因', () => {
+      const validData = { ...validHoldOrderData, reason: undefined }
+
+      const result = createHoldOrderSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許不提供客戶 ID', () => {
+      const validData = { ...validHoldOrderData, customerId: undefined }
+
+      const result = createHoldOrderSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受小計金額為 0', () => {
+      const validData = { ...validHoldOrderData, subtotal: 0 }
+
+      const result = createHoldOrderSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受折扣金額為 0', () => {
+      const validData = { ...validHoldOrderData, discount: 0 }
+
+      const result = createHoldOrderSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('resumeHoldOrderSchema', () => {
+    it('應該驗證有效的恢復掛單資料', () => {
+      const validData = { holdOrderId: 'hold-order-1' }
+
+      const result = resumeHoldOrderSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白掛單 ID', () => {
+      const invalidData = { holdOrderId: '' }
+
+      const result = resumeHoldOrderSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.holdOrderId).toBeDefined()
+      }
+    })
+  })
+})
+
+// ===================================
+// Invoices Validations Tests
+// ===================================
+
+describe('Invoices Validations', () => {
+  describe('createInvoiceSchema', () => {
+    const validInvoiceData = {
+      orderId: 'order-1',
+      invoiceType: 'B2B' as const,
+      buyerTaxId: '12345678',
+      buyerName: '測試公司',
+      carrierType: 'MOBILE' as const,
+      carrierNo: '/ABC1234',
+      donationCode: '1234',
+      amount: 1000,
+      taxAmount: 50,
+      totalAmount: 1050,
+    }
+
+    it('應該驗證有效的發票資料', () => {
+      const result = createInvoiceSchema.safeParse(validInvoiceData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白訂單 ID', () => {
+      const invalidData = { ...validInvoiceData, orderId: '' }
+
+      const result = createInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.orderId).toBeDefined()
+      }
+    })
+
+    it('應該接受所有有效的發票類型', () => {
+      const types = ['B2B', 'B2C'] as const
+      types.forEach((invoiceType) => {
+        const validData = { ...validInvoiceData, invoiceType }
+        const result = createInvoiceSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的發票類型', () => {
+      const invalidData = { ...validInvoiceData, invoiceType: 'INVALID' }
+
+      const result = createInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的載具類型', () => {
+      const types = ['MOBILE', 'CITIZEN', 'NONE'] as const
+      types.forEach((carrierType) => {
+        const validData = { ...validInvoiceData, carrierType }
+        const result = createInvoiceSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕負數的金額', () => {
+      const invalidData = { ...validInvoiceData, amount: -100 }
+
+      const result = createInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的稅額', () => {
+      const invalidData = { ...validInvoiceData, taxAmount: -10 }
+
+      const result = createInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的總金額', () => {
+      const invalidData = { ...validInvoiceData, totalAmount: -100 }
+
+      const result = createInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供買受人統編', () => {
+      const validData = { ...validInvoiceData, buyerTaxId: undefined }
+
+      const result = createInvoiceSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許不提供買受人名稱', () => {
+      const validData = { ...validInvoiceData, buyerName: undefined }
+
+      const result = createInvoiceSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受金額為 0', () => {
+      const validData = { ...validInvoiceData, amount: 0 }
+
+      const result = createInvoiceSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('voidInvoiceSchema', () => {
+    it('應該驗證有效的作廢發票資料', () => {
+      const validData = { voidReason: '客戶要求取消' }
+
+      const result = voidInvoiceSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白作廢原因', () => {
+      const invalidData = { voidReason: '' }
+
+      const result = voidInvoiceSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.voidReason).toBeDefined()
+      }
+    })
+  })
+})
+
+// ===================================
+// Numbering Rules Validations Tests
+// ===================================
+
+describe('Numbering Rules Validations', () => {
+  describe('createNumberingRuleSchema', () => {
+    const validNumberingRuleData = {
+      code: 'SO_RULE',
+      name: '銷售單編號規則',
+      prefix: 'SO-',
+      dateFormat: 'YYYYMMDD',
+      sequenceLength: 5,
+      resetPeriod: 'DAILY' as const,
+      isActive: true,
+    }
+
+    it('應該驗證有效的編號規則資料', () => {
+      const result = createNumberingRuleSchema.safeParse(validNumberingRuleData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白規則代碼', () => {
+      const invalidData = { ...validNumberingRuleData, code: '' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.code).toBeDefined()
+      }
+    })
+
+    it('應該拒絕超過 30 字元的規則代碼', () => {
+      const invalidData = { ...validNumberingRuleData, code: 'A'.repeat(31) }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含小寫字母的規則代碼', () => {
+      const invalidData = { ...validNumberingRuleData, code: 'so_rule' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含特殊字元的規則代碼（除了底線）', () => {
+      const invalidData = { ...validNumberingRuleData, code: 'SO-RULE' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白規則名稱', () => {
+      const invalidData = { ...validNumberingRuleData, name: '' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 100 字元的規則名稱', () => {
+      const invalidData = { ...validNumberingRuleData, name: '規'.repeat(101) }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白前綴', () => {
+      const invalidData = { ...validNumberingRuleData, prefix: '' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 10 字元的前綴', () => {
+      const invalidData = { ...validNumberingRuleData, prefix: 'A'.repeat(11) }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含小寫字母的前綴', () => {
+      const invalidData = { ...validNumberingRuleData, prefix: 'so-' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含底線的前綴', () => {
+      const invalidData = { ...validNumberingRuleData, prefix: 'SO_' }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕小於 1 的序號長度', () => {
+      const invalidData = { ...validNumberingRuleData, sequenceLength: 0 }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕大於 10 的序號長度', () => {
+      const invalidData = { ...validNumberingRuleData, sequenceLength: 11 }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕非整數的序號長度', () => {
+      const invalidData = { ...validNumberingRuleData, sequenceLength: 5.5 }
+
+      const result = createNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的重設週期', () => {
+      const periods = ['DAILY', 'MONTHLY', 'YEARLY', 'NEVER'] as const
+      periods.forEach((resetPeriod) => {
+        const validData = { ...validNumberingRuleData, resetPeriod }
+        const result = createNumberingRuleSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該允許 null 的日期格式', () => {
+      const validData = { ...validNumberingRuleData, dateFormat: null }
+
+      const result = createNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的重設週期', () => {
+      const validData = { ...validNumberingRuleData, resetPeriod: null }
+
+      const result = createNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受剛好 30 字元的規則代碼', () => {
+      const validData = { ...validNumberingRuleData, code: 'A'.repeat(30) }
+
+      const result = createNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受序號長度為 1', () => {
+      const validData = { ...validNumberingRuleData, sequenceLength: 1 }
+
+      const result = createNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受序號長度為 10', () => {
+      const validData = { ...validNumberingRuleData, sequenceLength: 10 }
+
+      const result = createNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updateNumberingRuleSchema', () => {
+    it('應該驗證有效的更新資料（不含 code）', () => {
+      const validData = {
+        name: '更新的規則名稱',
+        prefix: 'UP-',
+        sequenceLength: 6,
+        isActive: false,
+      }
+
+      const result = updateNumberingRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白規則名稱', () => {
+      const invalidData = {
+        name: '',
+        prefix: 'UP-',
+        sequenceLength: 6,
+        isActive: true,
+      }
+
+      const result = updateNumberingRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+  })
+})
+
+// ===================================
+// POS Validations Tests
+// ===================================
+
+describe('POS Validations', () => {
+  describe('openSessionSchema', () => {
+    const validOpenSessionData = {
+      storeId: 'store-1',
+      openingCash: 5000,
+    }
+
+    it('應該驗證有效的開班資料', () => {
+      const result = openSessionSchema.safeParse(validOpenSessionData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白店舖 ID', () => {
+      const invalidData = { ...validOpenSessionData, storeId: '' }
+
+      const result = openSessionSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.storeId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕負數的開班金額', () => {
+      const invalidData = { ...validOpenSessionData, openingCash: -100 }
+
+      const result = openSessionSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('邊界值測試：接受開班金額為 0', () => {
+      const validData = { ...validOpenSessionData, openingCash: 0 }
+
+      const result = openSessionSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('closeSessionSchema', () => {
+    const validCloseSessionData = {
+      closingCash: 10000,
+      notes: '今日正常營業',
+    }
+
+    it('應該驗證有效的關班資料', () => {
+      const result = closeSessionSchema.safeParse(validCloseSessionData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕負數的關班金額', () => {
+      const invalidData = { ...validCloseSessionData, closingCash: -100 }
+
+      const result = closeSessionSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供備註', () => {
+      const validData = { closingCash: 10000 }
+
+      const result = closeSessionSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受關班金額為 0', () => {
+      const validData = { ...validCloseSessionData, closingCash: 0 }
+
+      const result = closeSessionSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Price Rules Validations Tests
+// ===================================
+
+describe('Price Rules Validations', () => {
+  describe('createPriceRuleSchema', () => {
+    const validPriceRuleData = {
+      productId: 'product-1',
+      ruleType: 'QUANTITY' as const,
+      minQuantity: 10,
+      memberLevelId: 'level-1',
+      price: 100,
+      startDate: '2024-01-01',
+      endDate: '2024-12-31',
+      isActive: true,
+    }
+
+    it('應該驗證有效的價格規則資料', () => {
+      const result = createPriceRuleSchema.safeParse(validPriceRuleData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白商品 ID', () => {
+      const invalidData = { ...validPriceRuleData, productId: '' }
+
+      const result = createPriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.productId).toBeDefined()
+      }
+    })
+
+    it('應該接受所有有效的規則類型', () => {
+      const types = ['QUANTITY', 'MEMBER_LEVEL', 'PROMOTION'] as const
+      types.forEach((ruleType) => {
+        const validData = { ...validPriceRuleData, ruleType }
+        const result = createPriceRuleSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的規則類型', () => {
+      const invalidData = { ...validPriceRuleData, ruleType: 'INVALID' }
+
+      const result = createPriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的價格', () => {
+      const invalidData = { ...validPriceRuleData, price: -100 }
+
+      const result = createPriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕小於 1 的最小數量', () => {
+      const invalidData = { ...validPriceRuleData, minQuantity: 0 }
+
+      const result = createPriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕非整數的最小數量', () => {
+      const invalidData = { ...validPriceRuleData, minQuantity: 5.5 }
+
+      const result = createPriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的最小數量', () => {
+      const validData = { ...validPriceRuleData, minQuantity: null }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的會員等級 ID', () => {
+      const validData = { ...validPriceRuleData, memberLevelId: null }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的開始日期', () => {
+      const validData = { ...validPriceRuleData, startDate: null }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的結束日期', () => {
+      const validData = { ...validPriceRuleData, endDate: null }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受價格為 0', () => {
+      const validData = { ...validPriceRuleData, price: 0 }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受最小數量為 1', () => {
+      const validData = { ...validPriceRuleData, minQuantity: 1 }
+
+      const result = createPriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updatePriceRuleSchema', () => {
+    it('應該驗證有效的更新資料（不含 productId）', () => {
+      const validData = {
+        ruleType: 'MEMBER_LEVEL' as const,
+        price: 80,
+        isActive: false,
+      }
+
+      const result = updatePriceRuleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕負數的價格', () => {
+      const invalidData = {
+        ruleType: 'QUANTITY' as const,
+        price: -50,
+        isActive: true,
+      }
+
+      const result = updatePriceRuleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+  })
+})
+
+// ===================================
+// Product Bundles Validations Tests
+// ===================================
+
+describe('Product Bundles Validations', () => {
+  describe('createProductBundleSchema', () => {
+    const validProductBundleData = {
+      code: 'BUNDLE-001',
+      name: '超值套餐',
+      description: '含主餐、飲料、甜點',
+      bundlePrice: 299,
+      isActive: true,
+      startDate: '2024-01-01',
+      endDate: '2024-12-31',
+      items: [
+        { productId: 'product-1', quantity: 1 },
+        { productId: 'product-2', quantity: 2 },
+      ],
+    }
+
+    it('應該驗證有效的商品組合資料', () => {
+      const result = createProductBundleSchema.safeParse(validProductBundleData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白組合代碼', () => {
+      const invalidData = { ...validProductBundleData, code: '' }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.code).toBeDefined()
+      }
+    })
+
+    it('應該拒絕超過 30 字元的組合代碼', () => {
+      const invalidData = { ...validProductBundleData, code: 'A'.repeat(31) }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含特殊字元的組合代碼（除了底線和連字號）', () => {
+      const invalidData = { ...validProductBundleData, code: 'BUNDLE@001' }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受包含底線的組合代碼', () => {
+      const validData = { ...validProductBundleData, code: 'BUNDLE_001' }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該接受包含小寫字母的組合代碼', () => {
+      const validData = { ...validProductBundleData, code: 'bundle-001' }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白組合名稱', () => {
+      const invalidData = { ...validProductBundleData, name: '' }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 100 字元的組合名稱', () => {
+      const invalidData = { ...validProductBundleData, name: '套'.repeat(101) }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 500 字元的描述', () => {
+      const invalidData = { ...validProductBundleData, description: '描'.repeat(501) }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的描述', () => {
+      const validData = { ...validProductBundleData, description: null }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕負數的組合價格', () => {
+      const invalidData = { ...validProductBundleData, bundlePrice: -100 }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品項目陣列', () => {
+      const invalidData = { ...validProductBundleData, items: [] }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕數量小於 1 的項目', () => {
+      const invalidData = {
+        ...validProductBundleData,
+        items: [{ productId: 'product-1', quantity: 0 }],
+      }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品 ID', () => {
+      const invalidData = {
+        ...validProductBundleData,
+        items: [{ productId: '', quantity: 1 }],
+      }
+
+      const result = createProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的開始日期', () => {
+      const validData = { ...validProductBundleData, startDate: null }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許 null 的結束日期', () => {
+      const validData = { ...validProductBundleData, endDate: null }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受剛好 30 字元的組合代碼', () => {
+      const validData = { ...validProductBundleData, code: 'A'.repeat(30) }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受組合價格為 0', () => {
+      const validData = { ...validProductBundleData, bundlePrice: 0 }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受數量為 1 的項目', () => {
+      const validData = {
+        ...validProductBundleData,
+        items: [{ productId: 'product-1', quantity: 1 }],
+      }
+
+      const result = createProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updateProductBundleSchema', () => {
+    it('應該驗證有效的更新資料（不含 code）', () => {
+      const validData = {
+        name: '更新的套餐名稱',
+        bundlePrice: 399,
+        isActive: false,
+        items: [{ productId: 'product-1', quantity: 2 }],
+      }
+
+      const result = updateProductBundleSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白組合名稱', () => {
+      const invalidData = {
+        name: '',
+        bundlePrice: 399,
+        isActive: true,
+        items: [{ productId: 'product-1', quantity: 1 }],
+      }
+
+      const result = updateProductBundleSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+  })
+})
+
+// ===================================
+// Refunds Validations Tests
+// ===================================
+
+describe('Refunds Validations', () => {
+  describe('createRefundSchema', () => {
+    const validRefundData = {
+      orderId: 'order-1',
+      reason: '商品瑕疵',
+      type: 'REFUND' as const,
+      items: [
+        {
+          productId: 'product-1',
+          quantity: 1,
+          unitPrice: 100,
+          reason: '顏色不符',
+        },
+      ],
+      notes: '客戶來店退貨',
+    }
+
+    it('應該驗證有效的退換貨資料', () => {
+      const result = createRefundSchema.safeParse(validRefundData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白訂單 ID', () => {
+      const invalidData = { ...validRefundData, orderId: '' }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.orderId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕空白退換貨原因', () => {
+      const invalidData = { ...validRefundData, reason: '' }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.reason).toBeDefined()
+      }
+    })
+
+    it('應該接受所有有效的退換貨類型', () => {
+      const types = ['REFUND', 'EXCHANGE'] as const
+      types.forEach((type) => {
+        const validData = { ...validRefundData, type }
+        const result = createRefundSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的退換貨類型', () => {
+      const invalidData = { ...validRefundData, type: 'INVALID' }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品項目陣列', () => {
+      const invalidData = { ...validRefundData, items: [] }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白的商品 ID', () => {
+      const invalidData = {
+        ...validRefundData,
+        items: [{ productId: '', quantity: 1, unitPrice: 100 }],
+      }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕非正整數的數量', () => {
+      const invalidData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 0, unitPrice: 100 }],
+      }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕非整數的數量', () => {
+      const invalidData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 1.5, unitPrice: 100 }],
+      }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕負數的單價', () => {
+      const invalidData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 1, unitPrice: -100 }],
+      }
+
+      const result = createRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供商品項目原因', () => {
+      const validData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 1, unitPrice: 100 }],
+      }
+
+      const result = createRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該允許不提供備註', () => {
+      const validData = { ...validRefundData, notes: undefined }
+
+      const result = createRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受數量為 1', () => {
+      const validData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 1, unitPrice: 100 }],
+      }
+
+      const result = createRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受單價為 0', () => {
+      const validData = {
+        ...validRefundData,
+        items: [{ productId: 'product-1', quantity: 1, unitPrice: 0 }],
+      }
+
+      const result = createRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('approveRefundSchema', () => {
+    it('應該驗證有效的審核資料', () => {
+      const validData = {
+        approvalStatus: 'APPROVED' as const,
+        notes: '同意退貨',
+      }
+
+      const result = approveRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該接受所有有效的審核狀態', () => {
+      const statuses = ['APPROVED', 'REJECTED'] as const
+      statuses.forEach((approvalStatus) => {
+        const validData = { approvalStatus }
+        const result = approveRefundSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的審核狀態', () => {
+      const invalidData = { approvalStatus: 'INVALID' }
+
+      const result = approveRefundSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許不提供備註', () => {
+      const validData = { approvalStatus: 'REJECTED' as const }
+
+      const result = approveRefundSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+// ===================================
+// Scheduled Reports Validations Tests
+// ===================================
+
+describe('Scheduled Reports Validations', () => {
+  describe('createScheduledReportSchema', () => {
+    const validScheduledReportData = {
+      reportId: 'report-1',
+      schedule: '0 9 * * 1',
+      recipients: ['user1@example.com', 'user2@example.com'],
+      format: 'EXCEL' as const,
+      isActive: true,
+    }
+
+    it('應該驗證有效的排程報表資料', () => {
+      const result = createScheduledReportSchema.safeParse(validScheduledReportData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白報表 ID', () => {
+      const invalidData = { ...validScheduledReportData, reportId: '' }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.reportId).toBeDefined()
+      }
+    })
+
+    it('應該拒絕空白排程', () => {
+      const invalidData = { ...validScheduledReportData, schedule: '' }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕無效的 cron 格式', () => {
+      const invalidData = { ...validScheduledReportData, schedule: 'invalid cron' }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受有效的 cron 格式', () => {
+      const validSchedules = ['0 0 * * *', '30 9 * * 1-5', '0 */2 * * *', '0 0 1 * *', '0 0 1 1 *']
+      validSchedules.forEach((schedule) => {
+        const validData = { ...validScheduledReportData, schedule }
+        const result = createScheduledReportSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕空白的收件者陣列', () => {
+      const invalidData = { ...validScheduledReportData, recipients: [] }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕無效的 Email 格式', () => {
+      const invalidData = {
+        ...validScheduledReportData,
+        recipients: ['invalid-email'],
+      }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的格式', () => {
+      const formats = ['EXCEL', 'PDF'] as const
+      formats.forEach((format) => {
+        const validData = { ...validScheduledReportData, format }
+        const result = createScheduledReportSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的格式', () => {
+      const invalidData = { ...validScheduledReportData, format: 'CSV' }
+
+      const result = createScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('邊界值測試：接受只有一個收件者', () => {
+      const validData = {
+        ...validScheduledReportData,
+        recipients: ['single@example.com'],
+      }
+
+      const result = createScheduledReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updateScheduledReportSchema', () => {
+    it('應該驗證有效的更新資料（不含 reportId）', () => {
+      const validData = {
+        schedule: '0 10 * * 1-5',
+        recipients: ['updated@example.com'],
+        format: 'PDF' as const,
+        isActive: false,
+      }
+
+      const result = updateScheduledReportSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕無效的 cron 格式', () => {
+      const invalidData = {
+        schedule: 'not a cron',
+        recipients: ['test@example.com'],
+        format: 'EXCEL' as const,
+        isActive: true,
+      }
+
+      const result = updateScheduledReportSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+  })
+})
+
+// ===================================
+// System Parameters Validations Tests
+// ===================================
+
+describe('System Parameters Validations', () => {
+  describe('createSystemParameterSchema', () => {
+    const validSystemParameterData = {
+      code: 'TAX_RATE',
+      name: '稅率',
+      value: '0.05',
+      dataType: 'NUMBER' as const,
+      category: 'TAX' as const,
+      description: '銷售稅率設定',
+      isEditable: true,
+    }
+
+    it('應該驗證有效的系統參數資料', () => {
+      const result = createSystemParameterSchema.safeParse(validSystemParameterData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白參數代碼', () => {
+      const invalidData = { ...validSystemParameterData, code: '' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors
+        expect(errors.code).toBeDefined()
+      }
+    })
+
+    it('應該拒絕超過 50 字元的參數代碼', () => {
+      const invalidData = { ...validSystemParameterData, code: 'A'.repeat(51) }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含小寫字母的參數代碼', () => {
+      const invalidData = { ...validSystemParameterData, code: 'tax_rate' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕包含特殊字元的參數代碼（除了底線）', () => {
+      const invalidData = { ...validSystemParameterData, code: 'TAX-RATE' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白參數名稱', () => {
+      const invalidData = { ...validSystemParameterData, name: '' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 100 字元的參數名稱', () => {
+      const invalidData = { ...validSystemParameterData, name: '參'.repeat(101) }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白參數值', () => {
+      const invalidData = { ...validSystemParameterData, value: '' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的資料類型', () => {
+      const dataTypes = ['STRING', 'NUMBER', 'BOOLEAN', 'JSON'] as const
+      dataTypes.forEach((dataType) => {
+        const validData = { ...validSystemParameterData, dataType }
+        const result = createSystemParameterSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的資料類型', () => {
+      const invalidData = { ...validSystemParameterData, dataType: 'ARRAY' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該接受所有有效的分類', () => {
+      const categories = ['COMPANY', 'TAX', 'INVENTORY', 'SALES', 'SECURITY'] as const
+      categories.forEach((category) => {
+        const validData = { ...validSystemParameterData, category }
+        const result = createSystemParameterSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('應該拒絕無效的分類', () => {
+      const invalidData = { ...validSystemParameterData, category: 'OTHER' }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕超過 500 字元的描述', () => {
+      const invalidData = { ...validSystemParameterData, description: '描'.repeat(501) }
+
+      const result = createSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該允許 null 的描述', () => {
+      const validData = { ...validSystemParameterData, description: null }
+
+      const result = createSystemParameterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受剛好 50 字元的參數代碼', () => {
+      const validData = { ...validSystemParameterData, code: 'A'.repeat(50) }
+
+      const result = createSystemParameterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受剛好 100 字元的參數名稱', () => {
+      const validData = { ...validSystemParameterData, name: '參'.repeat(100) }
+
+      const result = createSystemParameterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('邊界值測試：接受剛好 500 字元的描述', () => {
+      const validData = { ...validSystemParameterData, description: '描'.repeat(500) }
+
+      const result = createSystemParameterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('updateSystemParameterSchema', () => {
+    it('應該驗證有效的更新資料（不含 code）', () => {
+      const validData = {
+        name: '更新的參數名稱',
+        value: '0.1',
+        dataType: 'NUMBER' as const,
+        category: 'TAX' as const,
+        isEditable: false,
+      }
+
+      const result = updateSystemParameterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+    })
+
+    it('應該拒絕空白參數名稱', () => {
+      const invalidData = {
+        name: '',
+        value: 'test',
+        dataType: 'STRING' as const,
+        category: 'COMPANY' as const,
+        isEditable: true,
+      }
+
+      const result = updateSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+    })
+
+    it('應該拒絕空白參數值', () => {
+      const invalidData = {
+        name: '測試參數',
+        value: '',
+        dataType: 'STRING' as const,
+        category: 'COMPANY' as const,
+        isEditable: true,
+      }
+
+      const result = updateSystemParameterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
     })
   })
 })
