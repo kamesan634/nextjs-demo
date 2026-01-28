@@ -2,6 +2,13 @@
 
 import prisma from '@/lib/prisma'
 import { createExcelBuffer, productHeaderMapping } from '@/lib/excel'
+import type { Product } from '@prisma/client'
+
+// 定義包含關聯資料的商品類型
+type ProductWithRelations = Product & {
+  category: { code: string }
+  unit: { code: string }
+}
 
 /**
  * 匯出商品資料
@@ -31,7 +38,7 @@ export async function exportProducts(params?: {
     orderBy: { sku: 'asc' },
   })
 
-  const data = products.map((p) => ({
+  const data = products.map((p: ProductWithRelations) => ({
     sku: p.sku,
     barcode: p.barcode || '',
     name: p.name,

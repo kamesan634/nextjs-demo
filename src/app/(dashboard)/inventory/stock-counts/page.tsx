@@ -125,30 +125,40 @@ async function StockCountsTableWrapper({
                   </TableCell>
                 </TableRow>
               ) : (
-                data.data.map((count) => {
-                  const statusInfo = getStatusLabel(count.status)
-                  return (
-                    <TableRow key={count.id}>
-                      <TableCell className="font-medium">{count.countNo}</TableCell>
-                      <TableCell>{count.warehouse.name}</TableCell>
-                      <TableCell>{getTypeLabel(count.type)}</TableCell>
-                      <TableCell>
-                        {format(new Date(count.countDate), 'yyyy/MM/dd', { locale: zhTW })}
-                      </TableCell>
-                      <TableCell>{count._count.items} 項</TableCell>
-                      <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/inventory/stock-counts/${count.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
+                data.data.map(
+                  (count: {
+                    id: string
+                    countNo: string
+                    warehouse: { name: string }
+                    type: string
+                    countDate: Date
+                    _count: { items: number }
+                    status: string
+                  }) => {
+                    const statusInfo = getStatusLabel(count.status)
+                    return (
+                      <TableRow key={count.id}>
+                        <TableCell className="font-medium">{count.countNo}</TableCell>
+                        <TableCell>{count.warehouse.name}</TableCell>
+                        <TableCell>{getTypeLabel(count.type)}</TableCell>
+                        <TableCell>
+                          {format(new Date(count.countDate), 'yyyy/MM/dd', { locale: zhTW })}
+                        </TableCell>
+                        <TableCell>{count._count.items} 項</TableCell>
+                        <TableCell>
+                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link href={`/inventory/stock-counts/${count.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
+                )
               )}
             </TableBody>
           </Table>

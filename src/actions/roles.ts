@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import { createRoleSchema, updateRoleSchema } from '@/lib/validations/auth'
 import type { ActionResult } from '@/types'
 
@@ -35,7 +36,7 @@ export async function getRoleOptions() {
     orderBy: { name: 'asc' },
   })
 
-  return roles.map((role) => ({
+  return roles.map((role: { id: string; code: string; name: string }) => ({
     value: role.id,
     label: role.name,
     code: role.code,
@@ -156,7 +157,7 @@ export async function updateRole(
       })
     } else {
       // 更新角色和權限
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 刪除舊權限
         await tx.rolePermission.deleteMany({
           where: { roleId: id },

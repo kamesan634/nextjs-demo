@@ -100,36 +100,48 @@ async function AdjustmentsTableWrapper({ page, pageSize }: { page: number; pageS
                   </TableCell>
                 </TableRow>
               ) : (
-                data.data.map((adj) => {
-                  const typeInfo = getTypeLabel(adj.type)
-                  return (
-                    <TableRow key={adj.id}>
-                      <TableCell className="font-medium">{adj.adjustmentNo}</TableCell>
-                      <TableCell>
-                        {format(new Date(adj.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{adj.product.name}</div>
-                          <div className="text-xs text-muted-foreground">{adj.product.sku}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={adj.type === 'ADD' ? 'text-green-600' : 'text-red-600'}>
-                          {adj.type === 'ADD' ? '+' : '-'}
-                          {adj.quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {adj.beforeQty} → {adj.afterQty}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{adj.reason || '-'}</TableCell>
-                    </TableRow>
-                  )
-                })
+                data.data.map(
+                  (adj: {
+                    id: string
+                    adjustmentNo: string
+                    createdAt: Date
+                    product: { name: string; sku: string }
+                    type: string
+                    quantity: number
+                    beforeQty: number
+                    afterQty: number
+                    reason: string | null
+                  }) => {
+                    const typeInfo = getTypeLabel(adj.type)
+                    return (
+                      <TableRow key={adj.id}>
+                        <TableCell className="font-medium">{adj.adjustmentNo}</TableCell>
+                        <TableCell>
+                          {format(new Date(adj.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{adj.product.name}</div>
+                            <div className="text-xs text-muted-foreground">{adj.product.sku}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={adj.type === 'ADD' ? 'text-green-600' : 'text-red-600'}>
+                            {adj.type === 'ADD' ? '+' : '-'}
+                            {adj.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {adj.beforeQty} → {adj.afterQty}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{adj.reason || '-'}</TableCell>
+                      </TableRow>
+                    )
+                  }
+                )
               )}
             </TableBody>
           </Table>

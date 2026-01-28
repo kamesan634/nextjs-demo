@@ -83,7 +83,9 @@ export async function getInventoryList(params?: {
   // 如果需要篩選低庫存
   let filteredData = inventories
   if (params?.lowStock) {
-    filteredData = inventories.filter((inv) => inv.quantity <= (inv.product.safetyStock || 0))
+    filteredData = inventories.filter(
+      (inv: (typeof inventories)[0]) => inv.quantity <= (inv.product.safetyStock || 0)
+    )
   }
 
   return {
@@ -156,7 +158,7 @@ export async function getLowStockAlerts(params?: { page?: number; pageSize?: num
   })
 
   const lowStockItems = allInventories.filter(
-    (inv) => inv.quantity <= (inv.product.safetyStock || 0)
+    (inv: (typeof allInventories)[0]) => inv.quantity <= (inv.product.safetyStock || 0)
   )
 
   const paginatedItems = lowStockItems.slice(skip, skip + pageSize)
@@ -526,7 +528,7 @@ export async function createStockCount(data: {
         status: 'DRAFT',
         notes: data.notes,
         items: {
-          create: inventories.map((inv) => ({
+          create: inventories.map((inv: (typeof inventories)[0]) => ({
             productId: inv.productId,
             systemQty: inv.quantity,
           })),
@@ -619,7 +621,9 @@ export async function completeStockCount(id: string): Promise<ActionResult> {
     }
 
     // 檢查所有明細是否都已盤點
-    const unCountedItems = stockCount.items.filter((item) => item.countedQty === null)
+    const unCountedItems = stockCount.items.filter(
+      (item: (typeof stockCount.items)[0]) => item.countedQty === null
+    )
     if (unCountedItems.length > 0) {
       return {
         success: false,
@@ -726,7 +730,8 @@ export async function getInventoryStats() {
   })
 
   const actualLowStockCount = inventoriesWithProduct.filter(
-    (inv) => inv.quantity > 0 && inv.quantity <= (inv.product.safetyStock || 0)
+    (inv: (typeof inventoriesWithProduct)[0]) =>
+      inv.quantity > 0 && inv.quantity <= (inv.product.safetyStock || 0)
   ).length
 
   return {

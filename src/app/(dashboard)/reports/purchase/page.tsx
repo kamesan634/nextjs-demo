@@ -167,25 +167,30 @@ export default function PurchaseReportPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData?.topSuppliers.map((supplier, index) => (
-                  <TableRow key={supplier.supplierId}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-sm">{index + 1}.</span>
-                        <div>
-                          <div className="font-medium">{supplier.supplierName}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {supplier.supplierCode}
+                {reportData?.topSuppliers.map(
+                  (
+                    supplier: NonNullable<typeof reportData>['topSuppliers'][number],
+                    index: number
+                  ) => (
+                    <TableRow key={supplier.supplierId}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm">{index + 1}.</span>
+                          <div>
+                            <div className="font-medium">{supplier.supplierName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {supplier.supplierCode}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{supplier.orderCount}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(supplier.totalAmount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right">{supplier.orderCount}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(supplier.totalAmount)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
                 {(!reportData?.topSuppliers || reportData.topSuppliers.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
@@ -205,24 +210,26 @@ export default function PurchaseReportPage() {
             <CardDescription>各狀態數量與金額</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {reportData?.statusStats.map((stat) => {
-              const total = reportData.summary.orderCount || 1
-              const percentage = (stat.count / total) * 100
-              return (
-                <div key={stat.status} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(stat.status)}
-                      <span>{getStatusName(stat.status)}</span>
+            {reportData?.statusStats.map(
+              (stat: NonNullable<typeof reportData>['statusStats'][number]) => {
+                const total = reportData.summary.orderCount || 1
+                const percentage = (stat.count / total) * 100
+                return (
+                  <div key={stat.status} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(stat.status)}
+                        <span>{getStatusName(stat.status)}</span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        {stat.count} 筆 / {formatCurrency(stat.amount)}
+                      </span>
                     </div>
-                    <span className="text-muted-foreground">
-                      {stat.count} 筆 / {formatCurrency(stat.amount)}
-                    </span>
+                    <Progress value={percentage} className="h-2" />
                   </div>
-                  <Progress value={percentage} className="h-2" />
-                </div>
-              )
-            })}
+                )
+              }
+            )}
             {(!reportData?.statusStats || reportData.statusStats.length === 0) && (
               <div className="text-center text-muted-foreground py-8">暫無資料</div>
             )}

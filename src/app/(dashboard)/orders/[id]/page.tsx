@@ -241,26 +241,36 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items?.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{item.productName}</div>
-                            <div className="text-xs text-muted-foreground">{item.productSku}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(item.unitPrice)}
-                        </TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">
-                          {Number(item.discount) > 0 ? `-${formatCurrency(item.discount)}` : '-'}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {formatCurrency(item.subtotal)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {order.items?.map(
+                      (item: {
+                        id: string
+                        productName: string
+                        productSku: string
+                        unitPrice: Decimal | number | null
+                        quantity: number
+                        discount: Decimal | number | null
+                        subtotal: Decimal | number | null
+                      }) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{item.productName}</div>
+                              <div className="text-xs text-muted-foreground">{item.productSku}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.unitPrice)}
+                          </TableCell>
+                          <TableCell className="text-right">{item.quantity}</TableCell>
+                          <TableCell className="text-right">
+                            {Number(item.discount) > 0 ? `-${formatCurrency(item.discount)}` : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(item.subtotal)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
 
@@ -325,27 +335,36 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {order.payments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            {format(new Date(payment.paidAt), 'yyyy/MM/dd HH:mm', {
-                              locale: zhTW,
-                            })}
-                          </TableCell>
-                          <TableCell>{payment.paymentMethod?.name || '-'}</TableCell>
-                          <TableCell>{payment.referenceNo || '-'}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(payment.amount)}
-                          </TableCell>
-                          <TableCell>
-                            {payment.status === 'COMPLETED' ? (
-                              <Badge className="bg-green-500">已完成</Badge>
-                            ) : (
-                              <Badge variant="outline">{payment.status}</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {order.payments.map(
+                        (payment: {
+                          id: string
+                          paidAt: Date
+                          paymentMethod: { name: string } | null
+                          referenceNo: string | null
+                          amount: Decimal | number | null
+                          status: string
+                        }) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>
+                              {format(new Date(payment.paidAt), 'yyyy/MM/dd HH:mm', {
+                                locale: zhTW,
+                              })}
+                            </TableCell>
+                            <TableCell>{payment.paymentMethod?.name || '-'}</TableCell>
+                            <TableCell>{payment.referenceNo || '-'}</TableCell>
+                            <TableCell className="text-right font-medium">
+                              {formatCurrency(payment.amount)}
+                            </TableCell>
+                            <TableCell>
+                              {payment.status === 'COMPLETED' ? (
+                                <Badge className="bg-green-500">已完成</Badge>
+                              ) : (
+                                <Badge variant="outline">{payment.status}</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -362,20 +381,28 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {order.refunds.map((refund) => (
-                    <div key={refund.id} className="mb-4 rounded-lg border p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{refund.refundNo}</span>
-                        <Badge variant={refund.status === 'COMPLETED' ? 'default' : 'outline'}>
-                          {refund.status === 'COMPLETED' ? '已完成' : refund.status}
-                        </Badge>
+                  {order.refunds.map(
+                    (refund: {
+                      id: string
+                      refundNo: string
+                      status: string
+                      reason: string
+                      refundAmount: Decimal | number | null
+                    }) => (
+                      <div key={refund.id} className="mb-4 rounded-lg border p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{refund.refundNo}</span>
+                          <Badge variant={refund.status === 'COMPLETED' ? 'default' : 'outline'}>
+                            {refund.status === 'COMPLETED' ? '已完成' : refund.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">原因：{refund.reason}</p>
+                        <p className="text-sm font-medium">
+                          退款金額：{formatCurrency(refund.refundAmount)}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">原因：{refund.reason}</p>
-                      <p className="text-sm font-medium">
-                        退款金額：{formatCurrency(refund.refundAmount)}
-                      </p>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </CardContent>
               </Card>
             )}

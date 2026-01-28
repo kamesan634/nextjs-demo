@@ -115,45 +115,59 @@ async function MovementsTableWrapper({
                   </TableCell>
                 </TableRow>
               ) : (
-                data.data.map((mov) => {
-                  const typeInfo = getMovementTypeLabel(mov.movementType)
-                  return (
-                    <TableRow key={mov.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(mov.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{mov.product.name}</div>
-                          <div className="text-xs text-muted-foreground">{mov.product.sku}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={mov.quantity > 0 ? 'text-green-600' : 'text-red-600'}>
-                          {mov.quantity > 0 ? '+' : ''}
-                          {mov.quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">{mov.beforeQty}</TableCell>
-                      <TableCell className="text-right">{mov.afterQty}</TableCell>
-                      <TableCell>
-                        {mov.referenceType && mov.referenceId ? (
-                          <span className="text-xs">
-                            {mov.referenceType}: {mov.referenceId}
+                data.data.map(
+                  (mov: {
+                    id: string
+                    createdAt: Date
+                    product: { name: string; sku: string }
+                    movementType: string
+                    quantity: number
+                    beforeQty: number
+                    afterQty: number
+                    referenceType: string | null
+                    referenceId: string | null
+                    reason: string | null
+                    notes: string | null
+                  }) => {
+                    const typeInfo = getMovementTypeLabel(mov.movementType)
+                    return (
+                      <TableRow key={mov.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(mov.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{mov.product.name}</div>
+                            <div className="text-xs text-muted-foreground">{mov.product.sku}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={mov.quantity > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {mov.quantity > 0 ? '+' : ''}
+                            {mov.quantity}
                           </span>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                        {mov.reason || mov.notes || '-'}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
+                        </TableCell>
+                        <TableCell className="text-right">{mov.beforeQty}</TableCell>
+                        <TableCell className="text-right">{mov.afterQty}</TableCell>
+                        <TableCell>
+                          {mov.referenceType && mov.referenceId ? (
+                            <span className="text-xs">
+                              {mov.referenceType}: {mov.referenceId}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                          {mov.reason || mov.notes || '-'}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
+                )
               )}
             </TableBody>
           </Table>

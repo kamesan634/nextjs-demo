@@ -75,7 +75,7 @@ export default function PurchaseOrderReceivePage({ params }: { params: Promise<{
     // 初始化驗收項目
     if (orderData?.items) {
       setItems(
-        orderData.items.map((item) => ({
+        orderData.items.map((item: NonNullable<typeof orderData.items>[number]) => ({
           productId: item.productId,
           productName: item.productName,
           productSku: item.productSku,

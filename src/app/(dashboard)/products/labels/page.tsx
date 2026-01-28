@@ -62,7 +62,7 @@ async function LabelPageData({ search, categoryId }: { search?: string; category
     orderBy: { name: 'asc' },
   })
 
-  const serializedProducts = products.map((p) => ({
+  const serializedProducts = products.map((p: (typeof products)[number]) => ({
     id: p.id,
     sku: p.sku,
     barcode: p.barcode,

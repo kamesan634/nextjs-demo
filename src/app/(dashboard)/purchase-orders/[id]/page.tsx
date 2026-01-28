@@ -231,7 +231,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items?.map((item) => (
+                    {order.items?.map((item: NonNullable<typeof order.items>[number]) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div>
@@ -287,7 +287,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {order.receipts.map((receipt) => (
+                  {order.receipts.map((receipt: (typeof order.receipts)[number]) => (
                     <div key={receipt.id} className="mb-4 rounded-lg border p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">{receipt.receiptNo}</span>

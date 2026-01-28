@@ -4,6 +4,20 @@ import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import type { ActionResult } from '@/types'
 
+// 定義採購單明細類型（用於類型標註）
+interface PurchaseOrderItemWithProduct {
+  id: string
+  productId: string
+  quantity: number
+  receivedQty: number
+}
+
+// 定義驗收單明細類型
+interface PurchaseReceiptItemBasic {
+  productId: string
+  acceptedQty: number
+}
+
 /**
  * 取得採購單列表
  */
@@ -584,7 +598,9 @@ export async function completePurchaseReceipt(id: string): Promise<ActionResult>
       )
 
       // 更新採購單明細的已收數量
-      const poItem = receipt.purchaseOrder.items.find((i) => i.productId === item.productId)
+      const poItem = receipt.purchaseOrder.items.find(
+        (i: PurchaseOrderItemWithProduct) => i.productId === item.productId
+      )
       if (poItem) {
         transactions.push(
           prisma.purchaseOrderItem.update({
@@ -609,8 +625,10 @@ export async function completePurchaseReceipt(id: string): Promise<ActionResult>
     )
 
     // 檢查採購單是否全部驗收完成
-    const allReceived = receipt.purchaseOrder.items.every((item) => {
-      const receiptItem = receipt.items.find((ri) => ri.productId === item.productId)
+    const allReceived = receipt.purchaseOrder.items.every((item: PurchaseOrderItemWithProduct) => {
+      const receiptItem = receipt.items.find(
+        (ri: PurchaseReceiptItemBasic) => ri.productId === item.productId
+      )
       const totalReceived = item.receivedQty + (receiptItem?.acceptedQty || 0)
       return totalReceived >= item.quantity
     })

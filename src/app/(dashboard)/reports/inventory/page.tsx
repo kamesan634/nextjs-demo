@@ -41,7 +41,13 @@ export default function InventoryReportPage() {
   useEffect(() => {
     // 載入倉庫列表
     getWarehouses({ pageSize: 100 }).then((result) => {
-      setWarehouses(result.data.map((w) => ({ id: w.id, code: w.code, name: w.name })))
+      setWarehouses(
+        result.data.map((w: (typeof result.data)[number]) => ({
+          id: w.id,
+          code: w.code,
+          name: w.name,
+        }))
+      )
     })
   }, [])
 
@@ -170,31 +176,33 @@ export default function InventoryReportPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData?.lowStockProducts.map((item) => (
-                  <TableRow key={`${item.productId}-${item.warehouseCode}`}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{item.productName}</div>
-                        <div className="text-xs text-muted-foreground">{item.productCode}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.warehouseName}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span
-                        className={
-                          item.quantity <= 0 ? 'text-red-500 font-bold' : 'text-yellow-600'
-                        }
-                      >
-                        {item.quantity}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {item.safetyStock}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {reportData?.lowStockProducts.map(
+                  (item: NonNullable<typeof reportData>['lowStockProducts'][number]) => (
+                    <TableRow key={`${item.productId}-${item.warehouseCode}`}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{item.productName}</div>
+                          <div className="text-xs text-muted-foreground">{item.productCode}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{item.warehouseName}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={
+                            item.quantity <= 0 ? 'text-red-500 font-bold' : 'text-yellow-600'
+                          }
+                        >
+                          {item.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {item.safetyStock}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
                 {(!reportData?.lowStockProducts || reportData.lowStockProducts.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
@@ -217,21 +225,23 @@ export default function InventoryReportPage() {
             <CardDescription>各倉庫庫存佔比</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {reportData?.warehouseInventory.map((wh) => {
-              const total = reportData.summary.totalQuantity || 1
-              const percentage = (wh.totalQuantity / total) * 100
-              return (
-                <div key={wh.warehouseId} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{wh.warehouseName}</span>
-                    <span className="text-muted-foreground">
-                      {wh.totalQuantity.toLocaleString()} ({wh.productCount} 品項)
-                    </span>
+            {reportData?.warehouseInventory.map(
+              (wh: NonNullable<typeof reportData>['warehouseInventory'][number]) => {
+                const total = reportData.summary.totalQuantity || 1
+                const percentage = (wh.totalQuantity / total) * 100
+                return (
+                  <div key={wh.warehouseId} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{wh.warehouseName}</span>
+                      <span className="text-muted-foreground">
+                        {wh.totalQuantity.toLocaleString()} ({wh.productCount} 品項)
+                      </span>
+                    </div>
+                    <Progress value={percentage} className="h-2" />
                   </div>
-                  <Progress value={percentage} className="h-2" />
-                </div>
-              )
-            })}
+                )
+              }
+            )}
             {(!reportData?.warehouseInventory || reportData.warehouseInventory.length === 0) && (
               <div className="text-center text-muted-foreground py-8">暫無資料</div>
             )}

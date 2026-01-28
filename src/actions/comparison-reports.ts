@@ -68,7 +68,7 @@ async function getPeriodData(
       return {
         value: Number(result._sum.totalAmount || 0),
         count: result._count,
-        details: dailySales.map((d) => ({
+        details: dailySales.map((d: (typeof dailySales)[0]) => ({
           date: d.orderDate,
           amount: Number(d._sum.totalAmount || 0),
           count: d._count,

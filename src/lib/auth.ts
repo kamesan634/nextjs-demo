@@ -82,7 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: user.role.id,
             code: user.role.code as RoleCode,
             name: user.role.name,
-            permissions: user.role.permissions.map((p) => ({
+            permissions: user.role.permissions.map((p: { module: string; action: string }) => ({
               module: p.module,
               action: p.action,
             })),

@@ -32,7 +32,7 @@ export default async function ProductPricesPage({ params }: PageProps) {
     orderBy: { sortOrder: 'asc' },
   })
 
-  const serializedRules = priceRules.map((r) => ({
+  const serializedRules = priceRules.map((r: (typeof priceRules)[number]) => ({
     ...r,
     price: Number(r.price),
   }))

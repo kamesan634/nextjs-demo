@@ -3,6 +3,7 @@
  * 測試 src/lib/numbering.ts 中的編號產生功能
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { generateNextNumber, previewNextNumber, NumberingRuleCodes } from '@/lib/numbering'
 import prisma from '@/lib/prisma'
@@ -59,7 +60,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -91,7 +92,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -123,7 +124,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -155,7 +156,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -175,7 +176,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
   })
 
   it('應該在規則不存在時拋出錯誤', async () => {
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -203,7 +204,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: false,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -233,7 +234,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -267,7 +268,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -301,7 +302,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -333,7 +334,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {
@@ -365,7 +366,7 @@ describe('generateNextNumber (產生下一個編號)', () => {
       isActive: true,
     }
 
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
       if (typeof callback === 'function') {
         const mockTx = {
           numberingRule: {

@@ -3,6 +3,7 @@
  * 測試使用者管理相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getUsers, getUser, createUser, updateUser, deleteUser } from '@/actions/users'
 import prisma from '@/lib/prisma'
@@ -74,7 +75,7 @@ describe('Users Server Actions', () => {
 
       const result = await getUsers()
 
-      result.data.forEach((user) => {
+      result.data.forEach((user: any) => {
         expect(user.password).toBeUndefined()
       })
     })

@@ -152,46 +152,48 @@ export async function completeGoodsIssue(id: string): Promise<ActionResult> {
       return { success: false, message: '出庫單狀態不正確' }
     }
 
-    await prisma.$transaction(async (tx) => {
-      // 扣減庫存
-      for (const item of issue.items) {
-        const inventory = await tx.inventory.findFirst({
-          where: { productId: item.productId, warehouseId: issue.warehouseId },
-        })
+    await prisma.$transaction(
+      async (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => {
+        // 扣減庫存
+        for (const item of issue.items) {
+          const inventory = await tx.inventory.findFirst({
+            where: { productId: item.productId, warehouseId: issue.warehouseId },
+          })
 
-        if (inventory) {
-          const newQty = inventory.quantity - item.quantity
-          await tx.inventory.update({
-            where: { id: inventory.id },
+          if (inventory) {
+            const newQty = inventory.quantity - item.quantity
+            await tx.inventory.update({
+              where: { id: inventory.id },
+              data: {
+                quantity: newQty,
+                availableQty: newQty - inventory.reservedQty,
+              },
+            })
+          }
+
+          // 記錄庫存異動
+          await tx.inventoryMovement.create({
             data: {
-              quantity: newQty,
-              availableQty: newQty - inventory.reservedQty,
+              productId: item.productId,
+              movementType: 'OUT',
+              quantity: -item.quantity,
+              beforeQty: inventory?.quantity || 0,
+              afterQty: (inventory?.quantity || 0) - item.quantity,
+              referenceType: 'GOODS_ISSUE',
+              referenceId: issue.id,
+              warehouseId: issue.warehouseId,
+              reason: `出庫單 ${issue.issueNo}`,
             },
           })
         }
 
-        // 記錄庫存異動
-        await tx.inventoryMovement.create({
-          data: {
-            productId: item.productId,
-            movementType: 'OUT',
-            quantity: -item.quantity,
-            beforeQty: inventory?.quantity || 0,
-            afterQty: (inventory?.quantity || 0) - item.quantity,
-            referenceType: 'GOODS_ISSUE',
-            referenceId: issue.id,
-            warehouseId: issue.warehouseId,
-            reason: `出庫單 ${issue.issueNo}`,
-          },
+        // 更新出庫單狀態
+        await tx.goodsIssue.update({
+          where: { id },
+          data: { status: 'COMPLETED', completedAt: new Date() },
         })
       }
-
-      // 更新出庫單狀態
-      await tx.goodsIssue.update({
-        where: { id },
-        data: { status: 'COMPLETED', completedAt: new Date() },
-      })
-    })
+    )
 
     revalidatePath('/inventory/issues')
 

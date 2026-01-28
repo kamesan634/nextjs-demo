@@ -249,7 +249,7 @@ export default async function SupplierDetailPage({ params }: PageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {supplier.prices.map((price) => (
+                {supplier.prices.map((price: (typeof supplier.prices)[number]) => (
                   <TableRow key={price.id}>
                     <TableCell className="font-medium">{price.product.sku}</TableCell>
                     <TableCell>{price.product.name}</TableCell>
@@ -287,7 +287,7 @@ export default async function SupplierDetailPage({ params }: PageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {supplier.purchaseOrders.map((order) => (
+                {supplier.purchaseOrders.map((order: (typeof supplier.purchaseOrders)[number]) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.orderNo}</TableCell>
                     <TableCell>

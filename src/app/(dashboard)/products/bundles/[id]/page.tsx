@@ -29,7 +29,7 @@ export default async function EditBundlePage({ params }: PageProps) {
   const serializedBundle = {
     ...bundle,
     bundlePrice: Number(bundle.bundlePrice),
-    items: bundle.items.map((i) => ({
+    items: bundle.items.map((i: (typeof bundle.items)[number]) => ({
       ...i,
       product: {
         ...i.product,
@@ -38,7 +38,7 @@ export default async function EditBundlePage({ params }: PageProps) {
     })),
   }
 
-  const serializedProducts = products.map((p) => ({
+  const serializedProducts = products.map((p: (typeof products)[number]) => ({
     ...p,
     sellingPrice: Number(p.sellingPrice),
   }))

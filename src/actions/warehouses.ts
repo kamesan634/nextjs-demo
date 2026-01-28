@@ -71,10 +71,12 @@ export async function getWarehouseOptions() {
     orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
   })
 
-  return warehouses.map((warehouse) => ({
-    value: warehouse.id,
-    label: `${warehouse.name} (${warehouse.code})${warehouse.isDefault ? ' - 預設' : ''}`,
-  }))
+  return warehouses.map(
+    (warehouse: { id: string; code: string; name: string; isDefault: boolean }) => ({
+      value: warehouse.id,
+      label: `${warehouse.name} (${warehouse.code})${warehouse.isDefault ? ' - 預設' : ''}`,
+    })
+  )
 }
 
 /**

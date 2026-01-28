@@ -4,6 +4,12 @@ import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import type { ActionResult } from '@/types'
 
+// Prisma 交易客戶端類型
+type TransactionClient = Omit<
+  typeof prisma,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>
+
 interface POSOrderItem {
   productId: string
   productName: string
@@ -116,7 +122,7 @@ export async function createPOSOrder(data: CreatePOSOrderData): Promise<ActionRe
     }
 
     // 使用交易建立訂單
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: TransactionClient) => {
       // 1. 建立訂單
       const orderNo = await generateOrderNo()
 

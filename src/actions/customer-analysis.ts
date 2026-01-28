@@ -24,12 +24,17 @@ export async function getCustomerRFMAnalysis() {
   })
 
   // 轉換為 RFM 分析所需的格式
-  const rfmData: CustomerRFMData[] = customers.map((customer) => {
+  const rfmData: CustomerRFMData[] = customers.map((customer: (typeof customers)[0]) => {
     const orders = customer.orders
     const lastPurchaseDate =
-      orders.length > 0 ? new Date(Math.max(...orders.map((o) => o.createdAt.getTime()))) : null
+      orders.length > 0
+        ? new Date(Math.max(...orders.map((o: (typeof orders)[0]) => o.createdAt.getTime())))
+        : null
 
-    const totalAmount = orders.reduce((sum, order) => sum + Number(order.totalAmount), 0)
+    const totalAmount = orders.reduce(
+      (sum: number, order: (typeof orders)[0]) => sum + Number(order.totalAmount),
+      0
+    )
 
     return {
       customerId: customer.id,

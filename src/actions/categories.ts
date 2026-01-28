@@ -72,11 +72,11 @@ export async function getCategoryTree() {
   const categoryMap = new Map<string, (typeof categories)[0] & { children: typeof categories }>()
   const roots: ((typeof categories)[0] & { children: typeof categories })[] = []
 
-  categories.forEach((cat) => {
+  categories.forEach((cat: (typeof categories)[0]) => {
     categoryMap.set(cat.id, { ...cat, children: [] })
   })
 
-  categories.forEach((cat) => {
+  categories.forEach((cat: (typeof categories)[0]) => {
     const node = categoryMap.get(cat.id)!
     if (cat.parentId) {
       const parent = categoryMap.get(cat.parentId)
@@ -105,7 +105,7 @@ export async function getCategoryOptions() {
     },
   })
 
-  return categories.map((cat) => ({
+  return categories.map((cat: (typeof categories)[0]) => ({
     value: cat.id,
     label: cat.parent ? `${cat.parent.name} > ${cat.name}` : cat.name,
     level: cat.level,

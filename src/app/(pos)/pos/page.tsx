@@ -48,7 +48,7 @@ export default async function POSPage() {
     orderBy: { sortOrder: 'asc' },
   })
 
-  const serializedProducts = products.map((p) => ({
+  const serializedProducts = products.map((p: (typeof products)[number]) => ({
     ...p,
     sellingPrice: Number(p.sellingPrice),
   }))

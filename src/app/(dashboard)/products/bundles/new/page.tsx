@@ -13,7 +13,7 @@ export default async function NewBundlePage() {
     orderBy: { name: 'asc' },
   })
 
-  const serializedProducts = products.map((p) => ({
+  const serializedProducts = products.map((p: (typeof products)[number]) => ({
     ...p,
     sellingPrice: Number(p.sellingPrice),
   }))

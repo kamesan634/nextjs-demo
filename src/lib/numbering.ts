@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 
 /**
  * 編號產生工具
@@ -12,7 +13,7 @@ import prisma from '@/lib/prisma'
  */
 export async function generateNextNumber(ruleCode: string): Promise<string> {
   // 使用交易確保序號產生的原子性
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const rule = await tx.numberingRule.findUnique({
       where: { code: ruleCode },
     })

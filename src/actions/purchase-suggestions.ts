@@ -1,6 +1,61 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
+
+type Decimal = Prisma.Decimal
+
+// 定義庫存項目類型
+interface InventoryItem {
+  quantity: number
+  warehouseId: string | null
+  reservedQty: number
+}
+
+// 定義供應商價格項目類型
+interface SupplierPriceItem {
+  price: Decimal
+  supplier: {
+    id: string
+    name: string
+  }
+}
+
+// 定義帶有關聯資料的商品類型（供文檔參考）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _ProductWithRelations {
+  id: string
+  sku: string
+  name: string
+  costPrice: Decimal
+  safetyStock: number
+  reorderPoint: number
+  reorderQty: number
+  category: { name: string }
+  unit: { name: string }
+  inventories: InventoryItem[]
+  supplierPrices: SupplierPriceItem[]
+}
+
+// 定義採購建議項目類型（供文檔參考）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _PurchaseSuggestion {
+  productId: string
+  productSku: string
+  productName: string
+  category: string
+  unit: string
+  currentStock: number
+  availableStock: number
+  safetyStock: number
+  reorderPoint: number
+  suggestedQty: number
+  costPrice: number
+  supplierId: string | null
+  supplierName: string
+  supplierPrice: number
+  urgency: 'CRITICAL' | 'HIGH' | 'NORMAL'
+}
 
 /**
  * 取得採購建議
@@ -71,12 +126,11 @@ export async function getPurchaseSuggestions(params?: {
         supplierPrice: preferredSupplier
           ? Number(preferredSupplier.price)
           : Number(product.costPrice),
-        urgency:
-          availableStock <= 0
-            ? 'CRITICAL'
-            : availableStock <= product.safetyStock
-              ? 'HIGH'
-              : 'NORMAL',
+        urgency: (availableStock <= 0
+          ? 'CRITICAL'
+          : availableStock <= product.safetyStock
+            ? 'HIGH'
+            : 'NORMAL') as 'CRITICAL' | 'HIGH' | 'NORMAL',
       }
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
@@ -96,11 +150,11 @@ export async function getPurchaseSuggestions(params?: {
     },
     summary: {
       total,
-      critical: suggestions.filter((s) => s?.urgency === 'CRITICAL').length,
-      high: suggestions.filter((s) => s?.urgency === 'HIGH').length,
-      normal: suggestions.filter((s) => s?.urgency === 'NORMAL').length,
+      critical: suggestions.filter((s) => s.urgency === 'CRITICAL').length,
+      high: suggestions.filter((s) => s.urgency === 'HIGH').length,
+      normal: suggestions.filter((s) => s.urgency === 'NORMAL').length,
       estimatedCost: suggestions.reduce(
-        (sum, s) => sum + (s?.suggestedQty || 0) * (s?.supplierPrice || 0),
+        (sum, s) => sum + (s.suggestedQty || 0) * (s.supplierPrice || 0),
         0
       ),
     },

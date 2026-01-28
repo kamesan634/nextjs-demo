@@ -159,21 +159,30 @@ export default function SalesReportPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData?.topProducts.map((product, index) => (
-                  <TableRow key={product.productId}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-sm">{index + 1}.</span>
-                        <div>
-                          <div className="font-medium">{product.productName}</div>
-                          <div className="text-xs text-muted-foreground">{product.productCode}</div>
+                {reportData?.topProducts.map(
+                  (
+                    product: NonNullable<typeof reportData>['topProducts'][number],
+                    index: number
+                  ) => (
+                    <TableRow key={product.productId}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm">{index + 1}.</span>
+                          <div>
+                            <div className="font-medium">{product.productName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {product.productCode}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{product.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(product.revenue)}</TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right">{product.quantity}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(product.revenue)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
                 {(!reportData?.topProducts || reportData.topProducts.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
@@ -193,21 +202,23 @@ export default function SalesReportPage() {
             <CardDescription>各付款方式佔比</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {reportData?.paymentStats.map((stat) => {
-              const total = reportData.summary.totalSales || 1
-              const percentage = (stat.amount / total) * 100
-              return (
-                <div key={stat.method} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>{getPaymentMethodName(stat.method)}</span>
-                    <span className="text-muted-foreground">
-                      {formatCurrency(stat.amount)} ({stat.count} 筆)
-                    </span>
+            {reportData?.paymentStats.map(
+              (stat: NonNullable<typeof reportData>['paymentStats'][number]) => {
+                const total = reportData.summary.totalSales || 1
+                const percentage = (stat.amount / total) * 100
+                return (
+                  <div key={stat.method} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{getPaymentMethodName(stat.method)}</span>
+                      <span className="text-muted-foreground">
+                        {formatCurrency(stat.amount)} ({stat.count} 筆)
+                      </span>
+                    </div>
+                    <Progress value={percentage} className="h-2" />
                   </div>
-                  <Progress value={percentage} className="h-2" />
-                </div>
-              )
-            })}
+                )
+              }
+            )}
             {(!reportData?.paymentStats || reportData.paymentStats.length === 0) && (
               <div className="text-center text-muted-foreground py-8">暫無資料</div>
             )}

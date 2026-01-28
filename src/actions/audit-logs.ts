@@ -148,7 +148,7 @@ export async function getAvailableModules() {
     distinct: ['module'],
     orderBy: { module: 'asc' },
   })
-  return modules.map((m) => m.module)
+  return modules.map((m: { module: string }) => m.module)
 }
 
 /**
@@ -180,11 +180,11 @@ export async function getAuditLogStats(startDate?: Date, endDate?: Date) {
 
   return {
     total,
-    byAction: actionCounts.map((a) => ({
+    byAction: actionCounts.map((a: { action: string; _count: { action: number } }) => ({
       action: a.action,
       count: a._count.action,
     })),
-    byModule: moduleCounts.map((m) => ({
+    byModule: moduleCounts.map((m: { module: string; _count: { module: number } }) => ({
       module: m.module,
       count: m._count.module,
     })),

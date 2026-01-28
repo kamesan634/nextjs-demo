@@ -69,11 +69,7 @@ export function RefundForm({ orderId, products = [] }: RefundFormProps) {
     setItems(items.filter((item) => item.id !== id))
   }
 
-  const handleItemChange = (
-    id: string,
-    field: keyof RefundItem,
-    value: RefundItem[keyof RefundItem]
-  ) => {
+  const handleItemChange = (id: string, field: keyof RefundItem, value: string | number) => {
     setItems(
       items.map((item) => {
         if (item.id === id) {
@@ -88,7 +84,22 @@ export function RefundForm({ orderId, products = [] }: RefundFormProps) {
               }
             }
           }
-          return { ...item, [field]: value }
+          // Handle each field explicitly to maintain type safety
+          if (field === 'quantity' && typeof value === 'number') {
+            return { ...item, quantity: value }
+          }
+          if (field === 'unitPrice' && typeof value === 'number') {
+            return { ...item, unitPrice: value }
+          }
+          if (field === 'reason' && typeof value === 'string') {
+            return { ...item, reason: value }
+          }
+          if (field === 'productId' && typeof value === 'string') {
+            return { ...item, productId: value }
+          }
+          if (field === 'productName' && typeof value === 'string') {
+            return { ...item, productName: value }
+          }
         }
         return item
       })

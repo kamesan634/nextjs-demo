@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { createUserSchema, updateUserSchema } from '@/lib/validations/auth'
 import type { ActionResult } from '@/types'
+import type { User, Role, Store } from '@prisma/client'
 
 /**
  * 取得所有使用者
@@ -45,7 +46,7 @@ export async function getUsers(params?: {
   ])
 
   return {
-    data: users.map((u) => ({
+    data: users.map((u: User & { role: Role; store: Store | null }) => ({
       ...u,
       password: undefined, // 移除密碼欄位
     })),

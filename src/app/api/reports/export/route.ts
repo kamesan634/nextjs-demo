@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
           orderBy: { orderDate: 'desc' },
           take: 1000,
         })
-        data = orders.map((o) => ({
+        data = orders.map((o: (typeof orders)[number]) => ({
           orderNo: o.orderNo,
           orderDate: o.orderDate.toISOString().split('T')[0],
           customer: o.customer?.name || '-',
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           orderBy: { name: 'asc' },
           take: 1000,
         })
-        data = products.map((p) => ({
+        data = products.map((p: (typeof products)[number]) => ({
           sku: p.sku,
           name: p.name,
           category: p.category.name,
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
           orderBy: { name: 'asc' },
           take: 1000,
         })
-        data = customers.map((c) => ({
+        data = customers.map((c: (typeof customers)[number]) => ({
           code: c.code,
           name: c.name,
           phone: c.phone || '-',
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
           orderBy: { product: { name: 'asc' } },
           take: 1000,
         })
-        data = inventory.map((i) => ({
+        data = inventory.map((i: (typeof inventory)[number]) => ({
           sku: i.product.sku,
           productName: i.product.name,
           warehouse: i.warehouse?.name || '-',

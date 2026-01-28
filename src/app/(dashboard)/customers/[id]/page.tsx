@@ -246,16 +246,24 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customer.orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.orderNo}</TableCell>
-                    <TableCell>
-                      {format(new Date(order.orderDate), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
-                    </TableCell>
-                    <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
-                    <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
-                  </TableRow>
-                ))}
+                {customer.orders.map(
+                  (order: {
+                    id: string
+                    orderNo: string
+                    totalAmount: number | { toNumber?: () => number }
+                    status: string
+                    orderDate: Date
+                  }) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.orderNo}</TableCell>
+                      <TableCell>
+                        {format(new Date(order.orderDate), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
+                      </TableCell>
+                      <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
+                      <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             </Table>
           )}
@@ -283,33 +291,42 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customer.pointsLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell>
-                      {format(new Date(log.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
-                    </TableCell>
-                    <TableCell>{getPointsTypeLabel(log.type)}</TableCell>
-                    <TableCell className="text-right">
-                      <span
-                        className={`inline-flex items-center gap-1 ${
-                          log.points > 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {log.points > 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        {log.points > 0 ? '+' : ''}
-                        {log.points.toLocaleString()}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">{log.balance.toLocaleString()}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {log.description || '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {customer.pointsLogs.map(
+                  (log: {
+                    id: string
+                    createdAt: Date
+                    type: string
+                    points: number
+                    balance: number
+                    description: string | null
+                  }) => (
+                    <TableRow key={log.id}>
+                      <TableCell>
+                        {format(new Date(log.createdAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
+                      </TableCell>
+                      <TableCell>{getPointsTypeLabel(log.type)}</TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={`inline-flex items-center gap-1 ${
+                            log.points > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}
+                        >
+                          {log.points > 0 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3" />
+                          )}
+                          {log.points > 0 ? '+' : ''}
+                          {log.points.toLocaleString()}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">{log.balance.toLocaleString()}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {log.description || '-'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             </Table>
           )}

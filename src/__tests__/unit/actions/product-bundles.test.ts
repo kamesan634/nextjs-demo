@@ -3,6 +3,7 @@
  * 測試商品組合相關的 Server Actions
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   getProductBundles,
@@ -274,7 +275,7 @@ describe('Product Bundles Server Actions', () => {
 
     it('應成功更新商品組合', async () => {
       vi.mocked(prisma.productBundle.findUnique).mockResolvedValue({ id: '1' } as never)
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         if (typeof callback === 'function') {
           return callback(prisma)
         }
@@ -321,7 +322,7 @@ describe('Product Bundles Server Actions', () => {
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         if (typeof callback === 'function') {
           return callback(mockTx as never)
         }

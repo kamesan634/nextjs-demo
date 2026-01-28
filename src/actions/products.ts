@@ -4,6 +4,20 @@ import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { productSchema } from '@/lib/validations/products'
 import type { ActionResult } from '@/types'
+import type { Product, Unit, TaxType } from '@prisma/client'
+
+// 定義帶有關聯資料的商品類型
+type ProductWithRelations = Product & {
+  category: { id: string; name: string }
+  unit: { id: string; name: string }
+  taxType: { id: string; name: string } | null
+  inventories: { quantity: number }[]
+}
+
+// 定義庫存類型
+interface InventoryQuantity {
+  quantity: number
+}
 
 /**
  * 取得所有商品
@@ -56,13 +70,16 @@ export async function getProducts(params?: {
   ])
 
   // 計算總庫存
-  const productsWithStock = products.map((product) => ({
+  const productsWithStock = products.map((product: ProductWithRelations) => ({
     ...product,
     costPrice: Number(product.costPrice),
     listPrice: Number(product.listPrice),
     sellingPrice: Number(product.sellingPrice),
     minPrice: product.minPrice ? Number(product.minPrice) : null,
-    totalStock: product.inventories.reduce((sum, inv) => sum + inv.quantity, 0),
+    totalStock: product.inventories.reduce(
+      (sum: number, inv: InventoryQuantity) => sum + inv.quantity,
+      0
+    ),
   }))
 
   return {
@@ -124,7 +141,7 @@ export async function getUnitOptions() {
     orderBy: { name: 'asc' },
   })
 
-  return units.map((unit) => ({
+  return units.map((unit: Unit) => ({
     value: unit.id,
     label: unit.name,
   }))
@@ -139,7 +156,7 @@ export async function getTaxTypeOptions() {
     orderBy: { name: 'asc' },
   })
 
-  return taxTypes.map((tax) => ({
+  return taxTypes.map((tax: TaxType) => ({
     value: tax.id,
     label: `${tax.name} (${Number(tax.rate) * 100}%)`,
   }))
@@ -353,7 +370,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     }
 
     // 有庫存記錄時不允許刪除
-    const hasStock = product.inventories.some((inv) => inv.quantity > 0)
+    const hasStock = product.inventories.some((inv: InventoryQuantity) => inv.quantity > 0)
     if (hasStock) {
       return {
         success: false,

@@ -70,7 +70,7 @@ export async function getStoreOptions() {
     orderBy: { name: 'asc' },
   })
 
-  return stores.map((store) => ({
+  return stores.map((store: { id: string; code: string; name: string }) => ({
     value: store.id,
     label: `${store.name} (${store.code})`,
   }))

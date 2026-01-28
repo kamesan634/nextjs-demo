@@ -140,20 +140,30 @@ async function DashboardStats() {
               <p className="text-sm text-muted-foreground">目前沒有庫存警示</p>
             ) : (
               <div className="space-y-3">
-                {inventoryAlerts.slice(0, 5).map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between text-sm">
-                    <div>
-                      <p className="font-medium">{alert.productName}</p>
-                      <p className="text-xs text-muted-foreground">SKU: {alert.productSku}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-destructive">
-                        {alert.quantity} / {alert.safetyStock}
-                      </p>
-                      <p className="text-xs text-muted-foreground">庫存 / 安全量</p>
-                    </div>
-                  </div>
-                ))}
+                {inventoryAlerts
+                  .slice(0, 5)
+                  .map(
+                    (alert: {
+                      id: string
+                      productName: string
+                      productSku: string
+                      quantity: number
+                      safetyStock: number
+                    }) => (
+                      <div key={alert.id} className="flex items-center justify-between text-sm">
+                        <div>
+                          <p className="font-medium">{alert.productName}</p>
+                          <p className="text-xs text-muted-foreground">SKU: {alert.productSku}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-destructive">
+                            {alert.quantity} / {alert.safetyStock}
+                          </p>
+                          <p className="text-xs text-muted-foreground">庫存 / 安全量</p>
+                        </div>
+                      </div>
+                    )
+                  )}
               </div>
             )}
           </CardContent>
@@ -170,17 +180,24 @@ async function DashboardStats() {
               <p className="text-sm text-muted-foreground">目前沒有訂單</p>
             ) : (
               <div className="space-y-3">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between text-sm">
-                    <div>
-                      <p className="font-medium">{order.orderNo}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {order.customerName || '一般顧客'}
-                      </p>
+                {recentOrders.map(
+                  (order: {
+                    id: string
+                    orderNo: string
+                    customerName: string | null
+                    totalAmount: number
+                  }) => (
+                    <div key={order.id} className="flex items-center justify-between text-sm">
+                      <div>
+                        <p className="font-medium">{order.orderNo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {order.customerName || '一般顧客'}
+                        </p>
+                      </div>
+                      <p className="font-medium">{formatCurrency(order.totalAmount)}</p>
                     </div>
-                    <p className="font-medium">{formatCurrency(order.totalAmount)}</p>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
           </CardContent>
@@ -197,20 +214,25 @@ async function DashboardStats() {
               <p className="text-sm text-muted-foreground">目前沒有銷售紀錄</p>
             ) : (
               <div className="space-y-3">
-                {topProducts.map((product, index) => (
-                  <div
-                    key={product.productId}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium">
-                        {index + 1}
-                      </span>
-                      <p className="font-medium">{product.productName}</p>
+                {topProducts.map(
+                  (
+                    product: { productId: string; productName: string; totalQty: number },
+                    index: number
+                  ) => (
+                    <div
+                      key={product.productId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium">
+                          {index + 1}
+                        </span>
+                        <p className="font-medium">{product.productName}</p>
+                      </div>
+                      <p className="text-muted-foreground">{product.totalQty} 件</p>
                     </div>
-                    <p className="text-muted-foreground">{product.totalQty} 件</p>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
           </CardContent>
@@ -323,15 +345,25 @@ async function getInventoryAlerts() {
   })
 
   return alerts
-    .filter((inv) => inv.quantity < inv.product.safetyStock)
-    .map((inv) => ({
-      id: inv.id,
-      productId: inv.productId,
-      productSku: inv.product.sku,
-      productName: inv.product.name,
-      quantity: inv.quantity,
-      safetyStock: inv.product.safetyStock,
-    }))
+    .filter(
+      (inv: { quantity: number; product: { safetyStock: number } }) =>
+        inv.quantity < inv.product.safetyStock
+    )
+    .map(
+      (inv: {
+        id: string
+        productId: string
+        quantity: number
+        product: { sku: string; name: string; safetyStock: number }
+      }) => ({
+        id: inv.id,
+        productId: inv.productId,
+        productSku: inv.product.sku,
+        productName: inv.product.name,
+        quantity: inv.quantity,
+        safetyStock: inv.product.safetyStock,
+      })
+    )
 }
 
 async function getRecentOrders() {
@@ -352,13 +384,21 @@ async function getRecentOrders() {
     take: 5,
   })
 
-  return orders.map((order) => ({
-    id: order.id,
-    orderNo: order.orderNo,
-    totalAmount: Number(order.totalAmount),
-    customerName: order.customer?.name || null,
-    status: order.status,
-  }))
+  return orders.map(
+    (order: {
+      id: string
+      orderNo: string
+      totalAmount: unknown
+      customer: { name: string } | null
+      status: string
+    }) => ({
+      id: order.id,
+      orderNo: order.orderNo,
+      totalAmount: Number(order.totalAmount),
+      customerName: order.customer?.name || null,
+      status: order.status,
+    })
+  )
 }
 
 async function getTopProducts() {
@@ -386,15 +426,15 @@ async function getTopProducts() {
   })
 
   // 取得商品名稱
-  const productIds = topProducts.map((p) => p.productId)
+  const productIds = topProducts.map((p: { productId: string }) => p.productId)
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, name: true },
   })
 
-  const productMap = new Map(products.map((p) => [p.id, p.name]))
+  const productMap = new Map(products.map((p: { id: string; name: string }) => [p.id, p.name]))
 
-  return topProducts.map((p) => ({
+  return topProducts.map((p: { productId: string; _sum: { quantity: number | null } }) => ({
     productId: p.productId,
     productName: productMap.get(p.productId) || '未知商品',
     totalQty: p._sum.quantity || 0,

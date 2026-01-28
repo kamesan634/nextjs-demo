@@ -8,6 +8,12 @@ import {
 } from '@/lib/validations/product-bundles'
 import type { ActionResult } from '@/types'
 
+// Prisma 交易客戶端類型
+type TransactionClient = Omit<
+  typeof prisma,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>
+
 /**
  * 取得所有商品組合
  */
@@ -158,7 +164,7 @@ export async function updateProductBundle(
       return { success: false, message: '商品組合不存在' }
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       // 刪除原有項目
       await tx.productBundleItem.deleteMany({ where: { bundleId: id } })
 
