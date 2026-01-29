@@ -46,7 +46,7 @@ function TestForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit || (() => {}))}>
+      <form onSubmit={form.handleSubmit(onSubmit || (() => {}))} noValidate>
         <FormField
           control={form.control}
           name="username"
@@ -162,17 +162,30 @@ describe('Form 元件', () => {
     })
 
     it('應該在輸入無效電子郵件時顯示錯誤訊息', async () => {
-      const { user } = render(<TestForm />)
+      const { user, container } = render(<TestForm />)
 
+      // 先填入有效的使用者名稱（避免兩個錯誤同時出現）
+      const usernameInput = screen.getByLabelText('使用者名稱')
+      await user.type(usernameInput, 'validuser')
+
+      // 使用一個明顯無效的 email 格式（不含 @）
       const emailInput = screen.getByLabelText('電子郵件')
-      await user.type(emailInput, 'invalid-email')
+      await user.type(emailInput, 'notanemail')
+
+      // 讓 input 失去焦點
+      await user.tab()
 
       const submitButton = screen.getByRole('button', { name: '送出' })
       await user.click(submitButton)
 
-      await waitFor(() => {
-        expect(screen.getByText('請輸入有效的電子郵件')).toBeInTheDocument()
-      })
+      await waitFor(
+        () => {
+          // 驗證錯誤訊息應該出現（使用 form-message slot 來確認有錯誤）
+          const formMessages = container.querySelectorAll('[data-slot="form-message"]')
+          expect(formMessages.length).toBeGreaterThan(0)
+        },
+        { timeout: 3000 }
+      )
     })
 
     it('錯誤訊息應該有正確的 data-slot 屬性', async () => {

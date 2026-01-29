@@ -176,23 +176,28 @@ describe('ExportButton', () => {
         blob: () => Promise.resolve(mockBlob),
       })
 
-      // Mock document.createElement 和相關方法
+      // 先 render，再 mock document 方法
+      const { user } = render(<ExportButton url="/api/export" filename="sales-report.xlsx" />)
+
+      // Mock document.createElement 只攔截 'a' 標籤
       const mockLink = {
         href: '',
         download: '',
         click: vi.fn(),
       }
-      const createElementSpy = vi
-        .spyOn(document, 'createElement')
-        .mockReturnValue(mockLink as unknown as HTMLAnchorElement)
+      const originalCreateElement = document.createElement.bind(document)
+      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+        if (tagName === 'a') {
+          return mockLink as unknown as HTMLAnchorElement
+        }
+        return originalCreateElement(tagName)
+      })
       const appendChildSpy = vi
         .spyOn(document.body, 'appendChild')
         .mockImplementation(() => mockLink as unknown as Node)
       const removeChildSpy = vi
         .spyOn(document.body, 'removeChild')
         .mockImplementation(() => mockLink as unknown as Node)
-
-      const { user } = render(<ExportButton url="/api/export" filename="sales-report.xlsx" />)
 
       await user.click(screen.getByRole('button'))
 
@@ -275,18 +280,26 @@ describe('ExportButton', () => {
         blob: () => Promise.resolve(new Blob(['test'])),
       })
 
+      // 先 render
+      const { user } = render(
+        <ExportButton url="/api/export" filename="報表_2024-01-01_銷售.xlsx" />
+      )
+
+      // 再 mock document 方法
       const mockLink = {
         href: '',
         download: '',
         click: vi.fn(),
       }
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLAnchorElement)
+      const originalCreateElement = document.createElement.bind(document)
+      vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+        if (tagName === 'a') {
+          return mockLink as unknown as HTMLAnchorElement
+        }
+        return originalCreateElement(tagName)
+      })
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as unknown as Node)
       vi.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink as unknown as Node)
-
-      const { user } = render(
-        <ExportButton url="/api/export" filename="報表_2024-01-01_銷售.xlsx" />
-      )
 
       await user.click(screen.getByRole('button'))
 
