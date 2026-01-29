@@ -28,6 +28,13 @@ export default defineConfig({
         'src/**/*.spec.{ts,tsx}',
         'src/__tests__/**',
         'src/types/**',
+        // Next.js 頁面組件和 API routes (需要 E2E 測試覆蓋)
+        'src/app/**/*.tsx',
+        'src/app/api/**/*.ts',
+        'src/middleware.ts',
+        // 第三方整合
+        'src/lib/auth.ts',
+        'src/lib/prisma.ts',
       ],
       thresholds: {
         lines: 80,
